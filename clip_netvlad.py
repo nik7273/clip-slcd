@@ -77,7 +77,6 @@ def run_clip_netvlad_example(args: argparse.Namespace):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--training-dir', type=str, required=True, help="path to training imgs")
-    parser.add_argument('--gt-file', type=str, required=True, help="path to ground truth file")
     parser.add_argument('--num-epochs', type=int, default=10, help="number of epochs to train for")
     args = parser.parse_args()
     
