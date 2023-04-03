@@ -132,7 +132,7 @@ def induced_flow(poses, disps, intrinsics, ii, jj):
         torch.arange(ht).to(disps.device).float(),
         torch.arange(wd).to(disps.device).float())
 
-    coords0 = torch.stack([x, y], dim=-1)
+    coords0 = torch.stack([x, y], dim=-1) # H*W*2
     coords1, valid = projective_transform(poses, disps, intrinsics, ii, jj, False)
 
     return coords1[...,:2] - coords0, valid

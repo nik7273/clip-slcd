@@ -207,6 +207,7 @@ class FactorGraph:
         # correlation features
         corr = self.corr(coords1)
 
+        # delta: revision flow field
         self.net, delta, weight, damping, upmask = \
             self.update_op(self.net, self.inp, corr, motn, self.ii, self.jj)
 
@@ -214,7 +215,7 @@ class FactorGraph:
             t0 = max(1, self.ii.min().item()+1)
 
         with torch.cuda.amp.autocast(enabled=False):
-            self.target = coords1 + delta.to(dtype=torch.float)
+            self.target = coords1 + delta.to(dtype=torch.float) #pij*
             self.weight = weight.to(dtype=torch.float)
 
             ht, wd = self.coords0.shape[0:2]

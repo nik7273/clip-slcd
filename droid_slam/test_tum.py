@@ -16,10 +16,9 @@ from droid import Droid
 
 
 def show_image(image):
-    # image = image.permute(1, 2, 0).cpu().numpy()
-    image = image[0].permute(1, 2, 0).cpu().numpy()
+    image = image.permute(1, 2, 0).cpu().numpy()
     cv2.imshow('image', image / 255.0)
-    cv2.waitKey(0)
+    cv2.waitKey(1)
 
 def image_stream(datapath, image_size=[320, 512]):
     """ image generator """
@@ -28,7 +27,6 @@ def image_stream(datapath, image_size=[320, 512]):
 
     K_l = np.array([fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0]).reshape(3,3)
     d_l = np.array([0.2624, -0.9531, -0.0054, 0.0026, 1.1633])
-
 
     # read all png images in folder
     images_list = sorted(glob.glob(os.path.join(datapath, 'rgb', '*.png')))[::2]
@@ -55,7 +53,7 @@ def image_stream(datapath, image_size=[320, 512]):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--datapath", default="datasets/TUM-RGBD/rgbd_dataset_freiburg1_360")
+    parser.add_argument("--datapath")
     parser.add_argument("--weights", default="droid.pth")
     parser.add_argument("--buffer", type=int, default=512)
     parser.add_argument("--image_size", default=[240, 320])
@@ -69,7 +67,6 @@ if __name__ == '__main__':
     parser.add_argument("--frontend_window", type=int, default=25)
     parser.add_argument("--frontend_radius", type=int, default=2)
     parser.add_argument("--frontend_nms", type=int, default=1)
-    parser.add_argument("--upsample", action="store_true")
 
     parser.add_argument("--backend_thresh", type=float, default=15.0)
     parser.add_argument("--backend_radius", type=int, default=2)
@@ -87,8 +84,8 @@ if __name__ == '__main__':
 
     tstamps = []
     for (t, image, intrinsics) in tqdm(image_stream(args.datapath)):
-        # if not args.disable_vis:
-        #     show_image(image)
+        if not args.disable_vis:
+            show_image(image)
         droid.track(t, image, intrinsics=intrinsics)
 
 

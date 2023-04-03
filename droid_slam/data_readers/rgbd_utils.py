@@ -125,6 +125,7 @@ def compute_distance_matrix_flow(poses, disps, intrinsics):
         flow1, val1 = pops.induced_flow(poses, disps, intrinsics, ii[i:i+s], jj[i:i+s])
         flow2, val2 = pops.induced_flow(poses, disps, intrinsics, jj[i:i+s], ii[i:i+s])
         
+        # H*W*2
         flow = torch.stack([flow1, flow2], dim=2)
         val = torch.stack([val1, val2], dim=2)
         

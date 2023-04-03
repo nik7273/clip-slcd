@@ -39,11 +39,13 @@ class DroidFrontend:
         self.t1 += 1
 
         if self.graph.corr is not None:
-            self.graph.rm_factors(self.graph.age > self.max_age, store=True)
+            self.graph.rm_factors(self.graph.age > self.max_age, store=True)  # based on age
 
         self.graph.add_proximity_factors(self.t1-5, max(self.t1-self.frontend_window, 0), 
             rad=self.frontend_radius, nms=self.frontend_nms, thresh=self.frontend_thresh, beta=self.beta, remove=True)
-
+        # # FIXME
+        # if self.t1>13:
+        #     a = 1
         self.video.disps[self.t1-1] = torch.where(self.video.disps_sens[self.t1-1] > 0, 
            self.video.disps_sens[self.t1-1], self.video.disps[self.t1-1])
 

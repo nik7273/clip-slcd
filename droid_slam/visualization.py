@@ -52,8 +52,8 @@ def create_point_actor(points, colors):
 
 def droid_visualization(video, device="cuda:0"):
     """ DROID visualization frontend """
-
-    torch.cuda.set_device(device)
+    if not device=='cpu':
+        torch.cuda.set_device(device)
     droid_visualization.video = video
     droid_visualization.cameras = {}
     droid_visualization.points = {}
