@@ -16,7 +16,7 @@ class TUMRGBDDataset(Dataset):
             for line in f:
                 if not line.startswith('#'):
                     values = line.split()
-                    timestamp = float(values[0])
+                    timestamp = str(float(values[0]))
                     pose = np.array([float(x) for x in values[1:]])
                     self.gt_poses[timestamp] = pose
         
@@ -30,13 +30,26 @@ class TUMRGBDDataset(Dataset):
                     self.rgb_filenames.append(os.path.join(self.rgb_folder, filename))
                     self.gt_poses_list.append(self.gt_poses[timestamp])
     
+
+        import re
+
+        def find_closest_key(dict_obj, key_str):
+            # Filter keys that match a decimal number pattern
+            regex = re.compile(r'^\d+\.\d+$')
+            filtered_keys = [k for k in dict_obj.keys() if regex.match(k)]
+
+            # Find the closest key
+            closest_key = min(filtered_keys, key=lambda k: abs(float(k) - float(key_str)))
+            return closest_key
+
+        import pdb; pdb.set_trace()
     def __len__(self):
         return len(self.rgb_filenames)
     
     def __getitem__(self, idx):
         rgb_file = self.rgb_filenames[idx]
         gt_pose = self.gt_poses_list[idx]
-        
+
         # Load the RGB image
         rgb_image = Image.open(rgb_file).convert('RGB')
         
