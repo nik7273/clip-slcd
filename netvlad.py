@@ -28,6 +28,7 @@ class NetVLAD(nn.Module):
         self.centroids = nn.Parameter(torch.rand(num_clusters, dim))
         self._init_params()
 
+    
     def _init_params(self):
         self.conv.weight = nn.Parameter(
             (2.0 * self.alpha * self.centroids).unsqueeze(-1).unsqueeze(-1)
