@@ -13,7 +13,7 @@ default_transform = T.Compose([
 ])
 
 # NOTE: Hard coded path to dataset folder 
-BASE_PATH = '../datasets/gsv_cities/'
+BASE_PATH = '/mnt/syn/advaiths/datasets/GSV-Cities/'
 
 if not Path(BASE_PATH).exists():
     raise FileNotFoundError(

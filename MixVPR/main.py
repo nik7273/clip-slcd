@@ -3,10 +3,13 @@ import torch
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 from torch.optim import lr_scheduler, optimizer
 import utils
+import torchvision.transforms as T
+import clip
 
 from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
 from models import helper
 
+import os 
 
 class VPRModel(pl.LightningModule):
     """This is the main model for Visual Place Recognition
@@ -61,7 +64,7 @@ class VPRModel(pl.LightningModule):
 
         self.loss_name = loss_name
         self.miner_name = miner_name
-        self.miner_margin = miner_margin
+        self.miner_margin = miner_margin    
         
         self.save_hyperparameters() # write hyperparams into a file
         
@@ -70,16 +73,38 @@ class VPRModel(pl.LightningModule):
         self.batch_acc = [] # we will keep track of the % of trivial pairs/triplets at the loss level 
 
         self.faiss_gpu = faiss_gpu
+        # perfect inekf
+        # adjoint purpose
+        
         
         # ----------------------------------
         # get the backbone and the aggregator
         self.backbone = helper.get_backbone(backbone_arch, pretrained, layers_to_freeze, layers_to_crop)
+        self.llm, self.llm_preprocess = clip.load("RN50", device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
         self.aggregator = helper.get_aggregator(agg_arch, agg_config)
         
     # the forward pass of the lightning model
     def forward(self, x):
+        #create a for loop going through the batch dimension 
+        #in the for loop convert each image to a PIL image 
+        #then pass it through the llm model
+        #then concatenate the llm output with the backbone output
+        #then pass it through the aggregator
+        #return the output
+        llm_in = []
+        tf = T.ToPILImage()
+        for i in range(x.shape[0]):
+            llm_img = tf(x[i])
+            llm_in.append(self.llm_preprocess(llm_img).unsqueeze(0).to(x.device))
+        
+        llm_in  = torch.cat(llm_in )
+        with torch.no_grad():
+            llm_feat = self.llm.encode_image(llm_in)
+        llm_feat = llm_feat.detach()
         x = self.backbone(x)
+        
         x = self.aggregator(x)
+        x = torch.cat([x, llm_feat.to(x.dtype)], dim=1)
         return x
     
     # configure the optimizer 
@@ -227,15 +252,15 @@ if __name__ == '__main__':
     pl.utilities.seed.seed_everything(seed=190223, workers=True)
         
     datamodule = GSVCitiesDataModule(
-        batch_size=120,
-        img_per_place=4,
-        min_img_per_place=4,
+        batch_size=32,
+        img_per_place=2,
+        min_img_per_place=2,
         shuffle_all=False, # shuffle all images or keep shuffling in-city only
         random_sample_from_each_place=True,
         image_size=(320, 320),
         num_workers=28,
         show_data_stats=True,
-        val_set_names=['pitts30k_val', 'pitts30k_test', 'msls_val'], # pitts30k_val, pitts30k_test, msls_val
+        val_set_names=['pitts30k_val'], # pitts30k_val, pitts30k_test, msls_val
     )
     
     # examples of backbones
@@ -302,7 +327,7 @@ if __name__ == '__main__':
     #------------------
     # we instanciate a trainer
     trainer = pl.Trainer(
-        accelerator='gpu', devices=[0],
+        accelerator='gpu', devices=1,
         default_root_dir=f'./LOGS/{model.encoder_arch}', # Tensorflow can be used to viz 
 
         num_sanity_val_steps=0, # runs a validation step before stating training

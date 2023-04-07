@@ -4,7 +4,7 @@ from torchvision import transforms as T
 
 from dataloaders.GSVCitiesDataset import GSVCitiesDataset
 from . import PittsburgDataset
-from . import MapillaryDataset
+# from . import MapillaryDataset
 
 from prettytable import PrettyTable
 
@@ -18,26 +18,14 @@ TRAIN_CITIES = [
     'Bangkok',
     'BuenosAires',
     'LosAngeles',
-    'MexicoCity',
-    'OSL',
-    'Rome',
     'Barcelona',
     'Chicago',
     'Madrid',
-    'Miami',
-    'Phoenix',
-    'TRT',
     'Boston',
     'Lisbon',
     'Medellin',
-    'Minneapolis',
-    'PRG',
-    'WashingtonDC',
     'Brussels',
     'London',
-    'Melbourne',
-    'Osaka',
-    'PRS',
 ]
 
 
@@ -142,7 +130,7 @@ class GSVCitiesDataModule(pl.LightningDataModule):
         return val_dataloaders
 
     def print_stats(self):
-        print()  # print a new line
+        print()  # print a new line 
         table = PrettyTable()
         table.field_names = ['Data', 'Value']
         table.align['Data'] = "l"
