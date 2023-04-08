@@ -80,9 +80,22 @@ class VPRModel(pl.LightningModule):
         # ----------------------------------
         # get the backbone and the aggregator
         self.backbone = helper.get_backbone(backbone_arch, pretrained, layers_to_freeze, layers_to_crop)
+
+        self.activation = {}
+        
+
         self.llm, self.llm_preprocess = clip.load("RN50", device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+        self.llm.visual.layer1.register_forward_hook(self.get_activation('layer1'))
+        self.llm.visual.layer2.register_forward_hook(self.get_activation('layer2'))
+        self.llm.visual.layer3.register_forward_hook(self.get_activation('layer3'))
+        self.llm.visual.layer4.register_forward_hook(self.get_activation('layer4'))
         self.aggregator = helper.get_aggregator(agg_arch, agg_config)
         
+    def get_activation(self, name):
+        def hook(model, input, output):
+            self.activation[name] = output.detach()
+        return hook
+    
     # the forward pass of the lightning model
     def forward(self, x):
         #create a for loop going through the batch dimension 
@@ -102,9 +115,12 @@ class VPRModel(pl.LightningModule):
             llm_feat = self.llm.encode_image(llm_in)
         llm_feat = llm_feat.detach()
         x = self.backbone(x)
-        
+
+        #resize pytorch tensor to BxCx20x20
+        llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
+        x = torch.cat([x, llm_feat], dim=1)
         x = self.aggregator(x)
-        x = torch.cat([x, llm_feat.to(x.dtype)], dim=1)
+        # x = torch.cat([x, llm_feat.to(x.dtype)], dim=1)
         return x
     
     # configure the optimizer 
@@ -287,7 +303,7 @@ if __name__ == '__main__':
         #             'out_channels': 2048},
 
         agg_arch='MixVPR',
-        agg_config={'in_channels' : 1024,
+        agg_config={'in_channels' : 2048,
                 'in_h' : 20,
                 'in_w' : 20,
                 'out_channels' : 1024,
