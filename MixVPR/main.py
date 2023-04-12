@@ -7,6 +7,7 @@ import torchvision.transforms as T
 import clip
 
 from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
+from dataloaders.HPointLocDataloader import HPointLocDataModule
 from models import helper
 
 import os 
@@ -97,22 +98,21 @@ class VPRModel(pl.LightningModule):
         return hook
     
     # the forward pass of the lightning model
-    def forward(self, x):
+    def forward(self, x, llm_x):
         #create a for loop going through the batch dimension 
         #in the for loop convert each image to a PIL image 
         #then pass it through the llm model
         #then concatenate the llm output with the backbone output
         #then pass it through the aggregator
         #return the output
-        llm_in = []
-        tf = T.ToPILImage()
-        for i in range(x.shape[0]):
-            llm_img = tf(x[i])
-            llm_in.append(self.llm_preprocess(llm_img).unsqueeze(0).to(x.device))
+        # llm_in = []
+        # for i in range(x.shape[0]):
+        #     llm_img = tf(x[i])
+        #     llm_in.append(self.llm_preprocess(llm_img).unsqueeze(0).to(x.device))
         
-        llm_in  = torch.cat(llm_in )
+        # llm_in  = torch.cat(llm_in )
         with torch.no_grad():
-            llm_feat = self.llm.encode_image(llm_in)
+            llm_feat = self.llm.encode_image(llm_x)
         llm_feat = llm_feat.detach()
         x = self.backbone(tf_vpr(x))
 
@@ -187,7 +187,7 @@ class VPRModel(pl.LightningModule):
     
     # This is the training step that's executed at each iteration
     def training_step(self, batch, batch_idx):
-        places, labels = batch
+        places, llm_places, labels = batch
         
         # Note that GSVCities yields places (each containing N images)
         # which means the dataloader will return a batch containing BS places
@@ -195,10 +195,11 @@ class VPRModel(pl.LightningModule):
         
         # reshape places and labels
         images = places.view(BS*N, ch, h, w)
+        llm_images = llm_places.flatten(0,1)
         labels = labels.view(-1)
 
         # Feed forward the batch to the model
-        descriptors = self(images) # Here we are calling the method forward that we defined above
+        descriptors = self(images, llm_images) # Here we are calling the method forward that we defined above
         loss = self.loss_function(descriptors, labels) # Call the loss_function we defined above
         
         self.log('loss', loss.item(), logger=True)
@@ -267,17 +268,19 @@ class VPRModel(pl.LightningModule):
 if __name__ == '__main__':
     pl.utilities.seed.seed_everything(seed=190223, workers=True)
         
-    datamodule = GSVCitiesDataModule(
-        batch_size=32,
-        img_per_place=2,
-        min_img_per_place=2,
-        shuffle_all=False, # shuffle all images or keep shuffling in-city only
-        random_sample_from_each_place=True,
-        image_size=(320, 320),
-        num_workers=28,
-        show_data_stats=True,
-        val_set_names=['pitts30k_val'], # pitts30k_val, pitts30k_test, msls_val
-    )
+    # datamodule = GSVCitiesDataModule(
+    #     batch_size=32,
+    #     img_per_place=2,
+    #     min_img_per_place=2,
+    #     shuffle_all=False, # shuffle all images or keep shuffling in-city only
+    #     random_sample_from_each_place=True,
+    #     image_size=(320, 320),
+    #     num_workers=28,
+    #     show_data_stats=True,
+    #     val_set_names=['pitts30k_val'], # pitts30k_val, pitts30k_test, msls_val
+    # )
+
+    
     
     # examples of backbones
     # resnet18, resnet50, resnet101, resnet152,
@@ -327,6 +330,19 @@ if __name__ == '__main__':
         miner_name='MultiSimilarityMiner', # example: TripletMarginMiner, MultiSimilarityMiner, PairMarginMiner
         miner_margin=0.1,
         faiss_gpu=False
+    )
+
+    datamodule = HPointLocDataModule(
+        batch_size=16,
+        img_per_place=2,
+        min_img_per_place=2,
+        shuffle_all=True, # shuffle all images or keep shuffling in-city only
+        random_sample_from_each_place=True,
+        image_size=(320, 320),
+        num_workers=28,
+        show_data_stats=True,
+        val_set_names=['pitts30k_val'], # pitts30k_val, pitts30k_test, msls_val
+        llm_transform = model.llm_preprocess
     )
     
     # model params saving using Pytorch Lightning
