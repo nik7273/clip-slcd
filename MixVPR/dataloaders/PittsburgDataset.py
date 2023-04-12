@@ -28,9 +28,9 @@ def input_transform(image_size=None):
 
 
 
-def get_whole_val_set(input_transform):
+def get_whole_val_set(input_transform, llm_transform):
     structFile = join(struct_dir, 'pitts30k_val.mat')
-    return WholeDatasetFromStruct(structFile, input_transform=input_transform)
+    return WholeDatasetFromStruct(structFile, input_transform=input_transform, llm_transform=llm_transform)
 
 
 def get_250k_val_set(input_transform):
@@ -38,14 +38,14 @@ def get_250k_val_set(input_transform):
     return WholeDatasetFromStruct(structFile, input_transform=input_transform)
 
 
-def get_whole_test_set(input_transform):
+def get_whole_test_set(input_transform, llm_transform):
     structFile = join(struct_dir, 'pitts30k_test.mat')
-    return WholeDatasetFromStruct(structFile, input_transform=input_transform)
+    return WholeDatasetFromStruct(structFile, input_transform=input_transform, llm_transform=llm_transform)
 
 
-def get_250k_test_set(input_transform):
+def get_250k_test_set(input_transform, llm_transform):
     structFile = join(struct_dir, 'pitts250k_test.mat')
-    return WholeDatasetFromStruct(structFile, input_transform=input_transform)
+    return WholeDatasetFromStruct(structFile, input_transform=input_transform, llm_transform=llm_transform)
 
 def get_whole_training_set(onlyDB=False):
     structFile = join(struct_dir, 'pitts30k_train.mat')
@@ -88,10 +88,11 @@ def parse_dbStruct(path):
 
 
 class WholeDatasetFromStruct(data.Dataset):
-    def __init__(self, structFile, input_transform=None, onlyDB=False):
+    def __init__(self, structFile, input_transform=None, llm_transform=None, onlyDB=False):
         super().__init__()
 
         self.input_transform = input_transform
+        self.llm_transform = llm_transform
 
         self.dbStruct = parse_dbStruct(structFile)
         self.images = [join(root_dir, dbIm) for dbIm in self.dbStruct.dbImage]
@@ -107,11 +108,12 @@ class WholeDatasetFromStruct(data.Dataset):
 
     def __getitem__(self, index):
         img = Image.open(self.images[index])
-
+        llm_img = self.llm_transform(img)
         if self.input_transform:
             img = self.input_transform(img)
+        
 
-        return img, index
+        return img, llm_img, index
 
     def __len__(self):
         return len(self.images)

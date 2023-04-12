@@ -41,7 +41,7 @@ class HPointLocDataset(Dataset):
         else:
             choices = np.random.choice(np.arange(place.shape[0]), self.imgs_per_place, replace=True)
             place = place[choices]
-        label = idx # wtf???
+        label = torch.tensor([idx]).repeat(self.imgs_per_place) # wtf???
         llm_place = []
         place_list = []
         for p in place:

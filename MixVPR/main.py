@@ -114,7 +114,7 @@ class VPRModel(pl.LightningModule):
         with torch.no_grad():
             llm_feat = self.llm.encode_image(llm_x)
         llm_feat = llm_feat.detach()
-        x = self.backbone(tf_vpr(x))
+        x = self.backbone(x)
 
         #resize pytorch tensor to BxCx20x20
         llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
@@ -213,9 +213,9 @@ class VPRModel(pl.LightningModule):
     # For validation, we will also iterate step by step over the validation set
     # this is the way Pytorch Lghtning is made. All about modularity, folks.
     def validation_step(self, batch, batch_idx, dataloader_idx=None):
-        places, _ = batch
+        places, llm_places, _ = batch
         # calculate descriptors
-        descriptors = self(places)
+        descriptors = self(places, llm_places)
         return descriptors.detach().cpu()
     
     def validation_epoch_end(self, val_step_outputs):

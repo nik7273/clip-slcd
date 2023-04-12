@@ -14,7 +14,7 @@ IMAGENET_MEAN_STD = {'mean': [0.485, 0.456, 0.406],
 VIT_MEAN_STD = {'mean': [0.5, 0.5, 0.5], 
                 'std': [0.5, 0.5, 0.5]}
 
-
+HARDCODE_PATH_TRAIN = '/mnt/syn/advaiths/datasets/HPointLoc'
 class HPointLocDataModule(pl.LightningDataModule):
     def __init__(self,
                  batch_size=32,
@@ -81,10 +81,10 @@ class HPointLocDataModule(pl.LightningDataModule):
             for valid_set_name in self.val_set_names:
                 if valid_set_name.lower() == 'pitts30k_test':
                     self.val_datasets.append(PittsburgDataset.get_whole_test_set(
-                        input_transform=self.valid_transform))
+                        input_transform=self.valid_transform, llm_transform=self.llm_transform))
                 elif valid_set_name.lower() == 'pitts30k_val':
                     self.val_datasets.append(PittsburgDataset.get_whole_val_set(
-                        input_transform=self.valid_transform))
+                        input_transform=self.valid_transform, llm_transform=self.llm_transform))
                 elif valid_set_name.lower() == 'msls_val':
                     self.val_datasets.append(MapillaryDataset.MSLS(
                         input_transform=self.valid_transform))
@@ -96,7 +96,7 @@ class HPointLocDataModule(pl.LightningDataModule):
                 self.print_stats()
 
     def reload(self):
-        self.train_dataset = HPointLocDataset(imgs_per_place=self.img_per_place, transform=self.train_transform, llm_transform=self.llm_transform)
+        self.train_dataset = HPointLocDataset(data_folder=HARDCODE_PATH_TRAIN, imgs_per_place=self.img_per_place, transform=self.train_transform, llm_transform=self.llm_transform)
 
     def train_dataloader(self):
         self.reload()
