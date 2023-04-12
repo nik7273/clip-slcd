@@ -29,12 +29,7 @@ class HPointLocDataset(Dataset):
                  ):
         super(HPointLocDataset, self).__init__()
         self.base_path = base_path
-        self.cities = cities
 
-        assert img_per_place <= min_img_per_place, \
-            f"img_per_place should be less than {min_img_per_place}"
-        self.img_per_place = img_per_place
-        self.min_img_per_place = min_img_per_place
         self.random_sample_from_each_place = random_sample_from_each_place
         self.transform = transform
         
