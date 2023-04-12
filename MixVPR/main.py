@@ -10,7 +10,7 @@ from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
 from models import helper
 
 import os 
-
+tf_vpr = T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
 class VPRModel(pl.LightningModule):
     """This is the main model for Visual Place Recognition
     we use Pytorch Lightning for modularity purposes.
@@ -114,7 +114,7 @@ class VPRModel(pl.LightningModule):
         with torch.no_grad():
             llm_feat = self.llm.encode_image(llm_in)
         llm_feat = llm_feat.detach()
-        x = self.backbone(x)
+        x = self.backbone(tf_vpr(x))
 
         #resize pytorch tensor to BxCx20x20
         llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)

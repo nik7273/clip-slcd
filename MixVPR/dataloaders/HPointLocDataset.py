@@ -8,27 +8,26 @@ from torch.utils.data import Dataset
 import torchvision.transforms as T
 
 default_transform = T.Compose([
-    T.ToTensor(),
+    T.ToTensor()
     # T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 
 # NOTE: Hard coded path to dataset folder 
-BASE_PATH = '/mnt/syn/advaiths/datasets/GSV-Cities/'
+BASE_PATH = '/mnt/syn/advaiths/datasets/HPointLoc/'
 
 if not Path(BASE_PATH).exists():
     raise FileNotFoundError(
-        'BASE_PATH is hardcoded, please adjust to point to gsv_cities')
+        'BASE_PATH is hardcoded, please adjust to point to HPointLoc')
 
-class GSVCitiesDataset(Dataset):
+class HPointLocDataset(Dataset):
     def __init__(self,
-                 cities=['London', 'Boston'],
                  img_per_place=4,
                  min_img_per_place=4,
                  random_sample_from_each_place=True,
                  transform=default_transform,
                  base_path=BASE_PATH
                  ):
-        super(GSVCitiesDataset, self).__init__()
+        super(HPointLocDataset, self).__init__()
         self.base_path = base_path
         self.cities = cities
 
