@@ -45,9 +45,13 @@ class HPointLocDataset(Dataset):
         self.place_sums.append(image_counter)
         self.image_indices = list(range(image_counter))
         self.all_positives = self.getPositives()
-        num_queries = 100
+        num_queries = 200
         num_references = 70
-        self.queries = np.random.choice(self.image_indices, num_queries)
+
+        #TODO: need to randomly sample at most one positive per place 
+        self.queries = []
+        for pl in self.place_set:
+            self.queries.append(np.random.choice(list(pl)))
         self.references = []
         for q in self.queries:
             self.references.append(self.all_positives[q])

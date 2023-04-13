@@ -1,5 +1,6 @@
 import pytorch_lightning as pl
 import torch
+import numpy as np
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 from torch.optim import lr_scheduler, optimizer
 import utils
@@ -111,14 +112,14 @@ class VPRModel(pl.LightningModule):
         #     llm_in.append(self.llm_preprocess(llm_img).unsqueeze(0).to(x.device))
         
         # llm_in  = torch.cat(llm_in )
-        with torch.no_grad():
-            llm_feat = self.llm.encode_image(llm_x)
-        llm_feat = llm_feat.detach()
+        # with torch.no_grad():
+        #     llm_feat = self.llm.encode_image(llm_x)
+        # llm_feat = llm_feat.detach()
         x = self.backbone(x)
 
         #resize pytorch tensor to BxCx20x20
-        llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
-        x = torch.cat([x, llm_feat], dim=1)
+        # llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
+        # x = torch.cat([x, llm_feat], dim=1)
         x = self.aggregator(x)
         # x = torch.cat([x, llm_feat.to(x.dtype)], dim=1)
         return x
@@ -249,11 +250,20 @@ class VPRModel(pl.LightningModule):
                 q_list = feats[num_references : ]
             elif 'hloc' in val_set_name:
                 #blah blah blah
+                num_references = val_dataset.references.shape[0]
                 reference_indices = val_dataset.references 
                 query_indices = val_dataset.queries 
-                positives = val_dataset.positives
+                positives = val_dataset.positives #should be np array of arrays 
+                # [[...] * num_q]
+                offset = 0
+                new_positives = []
+                for l in positives:
+                    new_positives.append(np.array(range(len(l))) + offset)
+                    offset += len(l)
                 r_list = feats[reference_indices]
                 q_list = feats[query_indices]
+                # new_positives = np.concatenate(new_positives)
+
             else:
                 print(f'Please implement validation_epoch_end for {val_set_name}')
                 raise NotImplemented
@@ -262,7 +272,7 @@ class VPRModel(pl.LightningModule):
             pitts_dict = utils.get_validation_recalls(r_list=r_list, 
                                                 q_list=q_list,
                                                 k_values=[1, 5, 10, 15, 20, 50, 100],
-                                                gt=positives,
+                                                gt=new_positives,
                                                 print_results=True,
                                                 dataset_name=val_set_name,
                                                 faiss_gpu=self.faiss_gpu
@@ -316,7 +326,7 @@ if __name__ == '__main__':
         #             'out_channels': 2048},
 
         agg_arch='MixVPR',
-        agg_config={'in_channels' : 2048,
+        agg_config={'in_channels' : 1024,
                 'in_h' : 20,
                 'in_w' : 20,
                 'out_channels' : 1024,
@@ -342,6 +352,7 @@ if __name__ == '__main__':
         faiss_gpu=False
     )
 
+    val_set = 'hloc'
     datamodule = HPointLocDataModule(
         batch_size=16,
         img_per_place=2,
@@ -349,18 +360,18 @@ if __name__ == '__main__':
         shuffle_all=True, # shuffle all images or keep shuffling in-city only
         random_sample_from_each_place=True,
         image_size=(320, 320),
-        num_workers=4,
+        num_workers=28,
         show_data_stats=True,
-        val_set_names=['hloc'], # pitts30k_val, pitts30k_test, msls_val
+        val_set_names=[val_set], # pitts30k_val, pitts30k_test, msls_val
         llm_transform = model.llm_preprocess
     )
     
     # model params saving using Pytorch Lightning
     # we save the best 3 models accoring to Recall@1 on pittsburg val
     checkpoint_cb = ModelCheckpoint(
-        monitor='pitts30k_val/R1',
+        monitor=f'{val_set}/R1',
         filename=f'{model.encoder_arch}' +
-        '_epoch({epoch:02d})_step({step:04d})_R1[{pitts30k_val/R1:.4f}]_R5[{pitts30k_val/R5:.4f}]',
+        '_epoch({epoch:02d})_step({step:04d})_R1[{hloc/R1:.4f}]_R5[{hloc/R5:.4f}]',
         auto_insert_metric_name=False,
         save_weights_only=True,
         save_top_k=3,

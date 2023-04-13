@@ -32,7 +32,7 @@ def get_whole_val_set(input_transform, llm_transform):
     structFile = join(struct_dir, 'pitts30k_val.mat')
     return WholeDatasetFromStruct(structFile, input_transform=input_transform, llm_transform=llm_transform)
 
-
+#train, test, val, query images 
 def get_250k_val_set(input_transform):
     structFile = join(struct_dir, 'pitts250k_val.mat')
     return WholeDatasetFromStruct(structFile, input_transform=input_transform)
