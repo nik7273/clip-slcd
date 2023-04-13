@@ -63,7 +63,7 @@ def run_clip_netvlad_example(args: argparse.Namespace):
 
     # train
     for epoch in range(args.num_epochs):
-        for batch_idx, (images, poses) in enumerate(dataloader):
+        for batch_idx, (images, positives, negatives) in enumerate(dataloader):
             optimizer.zero_grad()
             predicted_poses = clip_netvlad(images)
             triplet_loss = criterion(predicted_poses, poses)

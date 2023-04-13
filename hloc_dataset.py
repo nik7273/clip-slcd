@@ -25,6 +25,10 @@ class HLocDataset(Dataset):
         label = idx # wtf???
         return place, label
     
+class HLocEvalDataLoader(DataLoader):
+    def __init__(self):
+        
+
 
 def example(args: argparse.Namespace):
     """
