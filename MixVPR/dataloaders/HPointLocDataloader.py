@@ -88,6 +88,8 @@ class HPointLocDataModule(pl.LightningDataModule):
                 elif valid_set_name.lower() == 'msls_val':
                     self.val_datasets.append(MapillaryDataset.MSLS(
                         input_transform=self.valid_transform))
+                elif valid_set_name.lower() == 'hloc':
+                    self.val_datasets.append(HPointLocDataset(transform=self.valid_transform, llm_transform=self.llm_transform, split='val'))
                 else:
                     print(
                         f'Validation set {valid_set_name} does not exist or has not been implemented yet')

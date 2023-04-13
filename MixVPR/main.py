@@ -237,12 +237,15 @@ class VPRModel(pl.LightningModule):
                 # split to ref and queries
                 num_references = val_dataset.dbStruct.numDb
                 num_queries = len(val_dataset)-num_references
-                positives = val_dataset.getPositives()
+                positives = val_dataset.getPositives() #length of positives is num_queries
             elif 'msls' in val_set_name:
                 # split to ref and queries
                 num_references = val_dataset.num_references
                 num_queries = len(val_dataset)-num_references
                 positives = val_dataset.pIdx
+            elif 'hloc' in val_set_name:
+                #blah blah blah
+                pass
             else:
                 print(f'Please implement validation_epoch_end for {val_set_name}')
                 raise NotImplemented
@@ -341,7 +344,7 @@ if __name__ == '__main__':
         image_size=(320, 320),
         num_workers=28,
         show_data_stats=True,
-        val_set_names=['pitts30k_val'], # pitts30k_val, pitts30k_test, msls_val
+        val_set_names=['hloc'], # pitts30k_val, pitts30k_test, msls_val
         llm_transform = model.llm_preprocess
     )
     
