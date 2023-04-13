@@ -238,20 +238,27 @@ class VPRModel(pl.LightningModule):
                 num_references = val_dataset.dbStruct.numDb
                 num_queries = len(val_dataset)-num_references
                 positives = val_dataset.getPositives() #length of positives is num_queries
+                r_list = feats[ : num_references]
+                q_list = feats[num_references : ]
             elif 'msls' in val_set_name:
                 # split to ref and queries
                 num_references = val_dataset.num_references
                 num_queries = len(val_dataset)-num_references
                 positives = val_dataset.pIdx
+                r_list = feats[ : num_references]
+                q_list = feats[num_references : ]
             elif 'hloc' in val_set_name:
                 #blah blah blah
-                pass
+                reference_indices = val_dataset.references 
+                query_indices = val_dataset.queries 
+                positives = val_dataset.positives
+                r_list = feats[reference_indices]
+                q_list = feats[query_indices]
             else:
                 print(f'Please implement validation_epoch_end for {val_set_name}')
                 raise NotImplemented
 
-            r_list = feats[ : num_references]
-            q_list = feats[num_references : ]
+            
             pitts_dict = utils.get_validation_recalls(r_list=r_list, 
                                                 q_list=q_list,
                                                 k_values=[1, 5, 10, 15, 20, 50, 100],
@@ -342,7 +349,7 @@ if __name__ == '__main__':
         shuffle_all=True, # shuffle all images or keep shuffling in-city only
         random_sample_from_each_place=True,
         image_size=(320, 320),
-        num_workers=28,
+        num_workers=4,
         show_data_stats=True,
         val_set_names=['hloc'], # pitts30k_val, pitts30k_test, msls_val
         llm_transform = model.llm_preprocess

@@ -29,7 +29,7 @@ class HPointLocDataset(Dataset):
         place_counter = 0
         image_counter = 0
         for filename in self.filenames:
-            place_file = h5py.File(filename, 'r+')
+            place_file = h5py.File(filename, 'r')
             place = np.array(place_file['rgb'])
             num_images = place.shape[0]
             self.place_count += num_images*[place_counter]
@@ -42,12 +42,17 @@ class HPointLocDataset(Dataset):
             if not filename.endswith('.hdf5'):
                 print("Please make sure there are only .hdf5 files in your data folder")
                 #f1 = h5py.File(filename,'r+')
+        self.place_sums.append(image_counter)
         self.image_indices = list(range(image_counter))
-        self.positives = self.getPositives()
+        self.all_positives = self.getPositives()
         num_queries = 100
         num_references = 70
         self.queries = np.random.choice(self.image_indices, num_queries)
-        self.references = np.random.choice(self.image_indices, num_references)
+        self.references = []
+        for q in self.queries:
+            self.references.append(self.all_positives[q])
+        self.references = np.concatenate(self.references).squeeze() #long array of all the query indices
+        self.positives = [np.array(self.all_positives[q]) for q in self.queries] #list of np.arrays of indices
 
 
     def __len__(self):
@@ -58,10 +63,11 @@ class HPointLocDataset(Dataset):
     
     def __getitem__(self, idx: int):
         # get idxth hdf5 file
-        place_fname = self.filenames[idx] # assumption is that folder ONLY contains relevant .hdf5 files
-        place_file = h5py.File(place_fname, 'r+')
-        place = np.array(place_file['rgb'])
+       
         if self.split == 'train':
+            place_fname = self.filenames[idx] # assumption is that folder ONLY contains relevant .hdf5 files
+            place_file = h5py.File(place_fname, 'r')
+            place = np.array(place_file['rgb'])
             if self.imgs_per_place < place.shape[0]:
                 #randomly choose self.imgs_per_place images 
                 choices = np.random.choice(np.arange(place.shape[0]), self.imgs_per_place, replace=False)
@@ -80,15 +86,22 @@ class HPointLocDataset(Dataset):
                 llm_place.append(self.llm_transform(tmp).unsqueeze(0))
             llm_place = torch.cat(llm_place, dim=0)
             place = torch.cat(place_list, dim=0)
+            place_file.close()
             return place, llm_place, label
         elif self.split == 'val':
             place_idx = self.place_count[idx] #get the place idx 
-            sum_up_to_me = self.place_sums[place_idx]
-            little_index = idx % (sum_up_to_me + 1) 
+            place_fname = self.filenames[place_idx] # assumption is that folder ONLY contains relevant .hdf5 files
+            place_file = h5py.File(place_fname, 'r')
+            place = np.array(place_file['rgb'])
+
+            
+            diff = self.place_sums[place_idx + 1] - self.place_sums[place_idx]
+            little_index = (idx - self.place_sums[place_idx]) 
             image = place[little_index]
             tmp = T.ToPILImage()(image).convert('RGB')
             tmp2 = self.transform(tmp)
             llm_img = self.llm_transform(tmp)
+            place_file.close()
             return tmp2, llm_img, -1
 
     def getPositives(self):
@@ -100,7 +113,14 @@ class HPointLocDataset(Dataset):
             positives.append(np.array(list(complement)))
         return positives 
 
-            
+    def getPositives(self):
+        positives = []
+        for im_idx in self.image_indices:
+            place_idx = self.place_count[im_idx]
+            place_set = self.place_set[place_idx]
+            complement = place_set.difference(set([im_idx]))
+            positives.append(np.array(list(complement)))
+        return positives 
         
 
     
