@@ -108,14 +108,14 @@ class VPRModel(pl.LightningModule):
         #return the output
         
         # llm_in  = torch.cat(llm_in )
-        # with torch.no_grad():
-        #     llm_feat = self.llm.encode_image(llm_x)
-        # llm_feat = llm_feat.detach()
+        with torch.no_grad():
+            llm_feat = self.llm.encode_image(llm_x)
+        llm_feat = llm_feat.detach()
         x = self.backbone(x)
 
         #resize pytorch tensor to BxCx20x20
-        # llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
-        # x = torch.cat([x, llm_feat], dim=1)
+        llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
+        x = torch.cat([x, llm_feat], dim=1)
         x = self.aggregator(x)
         return x
     
@@ -321,7 +321,7 @@ if __name__ == '__main__':
         #             'out_channels': 2048},
 
         agg_arch='MixVPR',
-        agg_config={'in_channels' : 1024, #change this to 1024 if no clip, but 2048 with clip 
+        agg_config={'in_channels' : 2048, #change this to 1024 if no clip, but 2048 with clip 
                 'in_h' : 20,
                 'in_w' : 20,
                 'out_channels' : 1024,
