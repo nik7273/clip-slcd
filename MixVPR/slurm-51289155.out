@@ -1,0 +1,57 @@
+1
+Thu Apr 13 20:51:19 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A40          On   | 00000000:1E:00.0 Off |                    0 |
+|  0%   30C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  NVIDIA A40          On   | 00000000:1F:00.0 Off |                    0 |
+|  0%   31C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   2  NVIDIA A40          On   | 00000000:20:00.0 Off |                    0 |
+|  0%   31C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   3  NVIDIA A40          On   | 00000000:21:00.0 Off |                    0 |
+|  0%   29C    P8    28W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/utilities/seed.py:48: LightningDeprecationWarning: `pytorch_lightning.utilities.seed.seed_everything` has been deprecated in v1.8.0 and will be removed in v1.10.0. Please use `lightning_lite.utilities.seed.seed_everything` instead.
+  rank_zero_deprecation(
+[rank: 0] Global seed set to 190223
+Using 16bit native Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+LOCAL_RANK: 0 - CUDA_VISIBLE_DEVICES: [0,1,2,3]
+
+  | Name       | Type                 | Params
+----------------------------------------------------
+0 | loss_fn    | MultiSimilarityLoss  | 0     
+1 | miner      | MultiSimilarityMiner | 0     
+2 | backbone   | ResNet               | 8.5 M 
+3 | llm        | CLIP                 | 102 M 
+4 | aggregator | MixVPR               | 2.3 M 
+----------------------------------------------------
+111 M     Trainable params
+1.4 M     Non-trainable params
+112 M     Total params
+225.776   Total estimated model params size (MB)
+SLURM auto-requeueing enabled. Setting signal handlers.
+slurmstepd: error: *** JOB 51289155 ON gl1515 CANCELLED AT 2023-04-13T20:59:14 ***

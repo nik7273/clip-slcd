@@ -7,7 +7,7 @@ import utils
 import torchvision.transforms as T
 import clip
 
-from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
+# from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
 from dataloaders.HPointLocDataloader import HPointLocDataModule
 from models import helper
 
@@ -106,10 +106,6 @@ class VPRModel(pl.LightningModule):
         #then concatenate the llm output with the backbone output
         #then pass it through the aggregator
         #return the output
-        # llm_in = []
-        # for i in range(x.shape[0]):
-        #     llm_img = tf(x[i])
-        #     llm_in.append(self.llm_preprocess(llm_img).unsqueeze(0).to(x.device))
         
         # llm_in  = torch.cat(llm_in )
         # with torch.no_grad():
@@ -121,7 +117,6 @@ class VPRModel(pl.LightningModule):
         # llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
         # x = torch.cat([x, llm_feat], dim=1)
         x = self.aggregator(x)
-        # x = torch.cat([x, llm_feat.to(x.dtype)], dim=1)
         return x
     
     # configure the optimizer 
@@ -326,7 +321,7 @@ if __name__ == '__main__':
         #             'out_channels': 2048},
 
         agg_arch='MixVPR',
-        agg_config={'in_channels' : 1024,
+        agg_config={'in_channels' : 1024, #change this to 1024 if no clip, but 2048 with clip 
                 'in_h' : 20,
                 'in_w' : 20,
                 'out_channels' : 1024,
@@ -354,7 +349,7 @@ if __name__ == '__main__':
 
     val_set = 'hloc'
     datamodule = HPointLocDataModule(
-        batch_size=16,
+        batch_size=32,
         img_per_place=2,
         min_img_per_place=2,
         shuffle_all=True, # shuffle all images or keep shuffling in-city only
@@ -380,7 +375,7 @@ if __name__ == '__main__':
     #------------------
     # we instanciate a trainer
     trainer = pl.Trainer(
-        accelerator='gpu', devices=1,
+        accelerator='cuda', gpus=1,
         default_root_dir=f'./LOGS/{model.encoder_arch}', # Tensorflow can be used to viz 
 
         num_sanity_val_steps=0, # runs a validation step before stating training

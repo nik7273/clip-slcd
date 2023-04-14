@@ -1,0 +1,36 @@
+1
+Thu Apr 13 22:06:33 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A40          On   | 00000000:23:00.0 Off |                    0 |
+|  0%   28C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/utilities/seed.py:48: LightningDeprecationWarning: `pytorch_lightning.utilities.seed.seed_everything` has been deprecated in v1.8.0 and will be removed in v1.10.0. Please use `lightning_lite.utilities.seed.seed_everything` instead.
+  rank_zero_deprecation(
+[rank: 0] Global seed set to 190223
+Traceback (most recent call last):
+  File "/home/advaiths/clip-slcd/MixVPR/main.py", line 382, in <module>
+    trainer = pl.Trainer(
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/utilities/argparse.py", line 340, in insert_env_defaults
+    return fn(self, **kwargs)
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 408, in __init__
+    self._accelerator_connector = AcceleratorConnector(
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py", line 192, in __init__
+    self._check_config_and_set_final_flags(
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/connectors/accelerator_connector.py", line 291, in _check_config_and_set_final_flags
+    raise ValueError(
+ValueError: You selected an invalid accelerator name: `accelerator='dp'`. Available names are: cpu, cuda, hpu, ipu, mps, tpu.

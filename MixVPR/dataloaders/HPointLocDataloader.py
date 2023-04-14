@@ -2,7 +2,7 @@ import pytorch_lightning as pl
 from torch.utils.data.dataloader import DataLoader
 from torchvision import transforms as T
 from dataloaders.HPointLocDataset import HPointLocDataset
-from . import PittsburgDataset
+# from . import PittsburgDataset
 import clip 
 # from . import MapillaryDataset
 
@@ -14,7 +14,6 @@ IMAGENET_MEAN_STD = {'mean': [0.485, 0.456, 0.406],
 VIT_MEAN_STD = {'mean': [0.5, 0.5, 0.5], 
                 'std': [0.5, 0.5, 0.5]}
 
-HARDCODE_PATH_TRAIN = '/mnt/syn/advaiths/datasets/HPointLoc'
 class HPointLocDataModule(pl.LightningDataModule):
     def __init__(self,
                  batch_size=32,
@@ -98,7 +97,7 @@ class HPointLocDataModule(pl.LightningDataModule):
                 self.print_stats()
 
     def reload(self):
-        self.train_dataset = HPointLocDataset(data_folder=HARDCODE_PATH_TRAIN, imgs_per_place=self.img_per_place, transform=self.train_transform, llm_transform=self.llm_transform)
+        self.train_dataset = HPointLocDataset(imgs_per_place=self.img_per_place, transform=self.train_transform, llm_transform=self.llm_transform)
 
     def train_dataloader(self):
         self.reload()

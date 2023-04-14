@@ -1,0 +1,64 @@
+1
+Thu Apr 13 20:02:47 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A40          On   | 00000000:1D:00.0 Off |                    0 |
+|  0%   28C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  NVIDIA A40          On   | 00000000:1E:00.0 Off |                    0 |
+|  0%   29C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   2  NVIDIA A40          On   | 00000000:23:00.0 Off |                    0 |
+|  0%   29C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   3  NVIDIA A40          On   | 00000000:24:00.0 Off |                    0 |
+|  0%   31C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/utilities/seed.py:48: LightningDeprecationWarning: `pytorch_lightning.utilities.seed.seed_everything` has been deprecated in v1.8.0 and will be removed in v1.10.0. Please use `lightning_lite.utilities.seed.seed_everything` instead.
+  rank_zero_deprecation(
+[rank: 0] Global seed set to 190223
+Using 16bit native Automatic Mixed Precision (AMP)
+GPU available: True (cuda), used: True
+TPU available: False, using: 0 TPU cores
+IPU available: False, using: 0 IPUs
+HPU available: False, using: 0 HPUs
+Traceback (most recent call last):
+  File "/home/advaiths/clip-slcd/MixVPR/main.py", line 397, in <module>
+    trainer.fit(model=model, datamodule=datamodule)
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 582, in fit
+    call._call_and_handle_interrupt(
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/call.py", line 38, in _call_and_handle_interrupt
+    return trainer_fn(*args, **kwargs)
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 624, in _fit_impl
+    self._run(model, ckpt_path=self.ckpt_path)
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1000, in _run
+    self._call_setup_hook()  # allow user to setup lightning_module in accelerator environment
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1247, in _call_setup_hook
+    self._call_lightning_datamodule_hook("setup", stage=fn)
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/pytorch_lightning/trainer/trainer.py", line 1324, in _call_lightning_datamodule_hook
+    return fn(*args, **kwargs)
+  File "/home/advaiths/clip-slcd/MixVPR/dataloaders/HPointLocDataloader.py", line 77, in setup
+    self.reload()
+  File "/home/advaiths/clip-slcd/MixVPR/dataloaders/HPointLocDataloader.py", line 101, in reload
+    self.train_dataset = HPointLocDataset(data_folder=HARDCODE_PATH_TRAIN, imgs_per_place=self.img_per_place, transform=self.train_transform, llm_transform=self.llm_transform)
+  File "/home/advaiths/clip-slcd/MixVPR/dataloaders/HPointLocDataset.py", line 59, in __init__
+    self.references = np.concatenate(self.references).squeeze() #long array of all the query indices
+  File "<__array_function__ internals>", line 180, in concatenate
+ValueError: need at least one array to concatenate

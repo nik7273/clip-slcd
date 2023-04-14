@@ -1,0 +1,41 @@
+1
+Thu Apr 13 20:47:55 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A40          On   | 00000000:1E:00.0 Off |                    0 |
+|  0%   30C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  NVIDIA A40          On   | 00000000:1F:00.0 Off |                    0 |
+|  0%   31C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   2  NVIDIA A40          On   | 00000000:20:00.0 Off |                    0 |
+|  0%   30C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   3  NVIDIA A40          On   | 00000000:21:00.0 Off |                    0 |
+|  0%   29C    P8    28W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+Traceback (most recent call last):
+  File "/home/advaiths/clip-slcd/MixVPR/main.py", line 11, in <module>
+    from dataloaders.HPointLocDataloader import HPointLocDataModule
+  File "/home/advaiths/clip-slcd/MixVPR/dataloaders/HPointLocDataloader.py", line 4, in <module>
+    from dataloaders.HPointLocDataset import HPointLocDataset
+  File "/home/advaiths/clip-slcd/MixVPR/dataloaders/HPointLocDataset.py", line 3, in <module>
+    import h5py    
+ModuleNotFoundError: No module named 'h5py'

@@ -1,0 +1,29 @@
+1
+Thu Apr 13 19:45:57 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A40          On   | 00000000:23:00.0 Off |                    0 |
+|  0%   28C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+Traceback (most recent call last):
+  File "/home/advaiths/clip-slcd/MixVPR/main.py", line 6, in <module>
+    import utils
+  File "/home/advaiths/clip-slcd/MixVPR/utils/__init__.py", line 1, in <module>
+    from .losses import get_miner, get_loss
+  File "/home/advaiths/clip-slcd/MixVPR/utils/losses.py", line 1, in <module>
+    from pytorch_metric_learning import losses, miners
+ModuleNotFoundError: No module named 'pytorch_metric_learning'

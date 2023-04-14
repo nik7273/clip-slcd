@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import glob 
 from torch.utils.data import Dataset, DataLoader
 
-HARDCODE_PATH = '/mnt/syn/advaiths/datasets/HPointLoc'
+# HARDCODE_PATH = '/mnt/syn/advaiths/datasets/HPointLoc'
+HARDCODE_PATH = '/scratch/kskin_root/kskin1/advaiths/HPointLoc'
 
 class HPointLocDataset(Dataset):
     def __init__(self, data_folder=HARDCODE_PATH, transform=None, llm_transform=None, imgs_per_place=10, split='train'):

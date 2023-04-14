@@ -1,0 +1,47 @@
+1
+Thu Apr 13 20:32:25 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 520.61.05    Driver Version: 520.61.05    CUDA Version: 11.8     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  NVIDIA A40          On   | 00000000:1E:00.0 Off |                    0 |
+|  0%   30C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  NVIDIA A40          On   | 00000000:1F:00.0 Off |                    0 |
+|  0%   31C    P8    31W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   2  NVIDIA A40          On   | 00000000:20:00.0 Off |                    0 |
+|  0%   31C    P8    30W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   3  NVIDIA A40          On   | 00000000:21:00.0 Off |                    0 |
+|  0%   30C    P8    28W / 300W |      0MiB / 46068MiB |      0%   E. Process |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+Traceback (most recent call last):
+  File "/home/advaiths/clip-slcd/MixVPR/main.py", line 6, in <module>
+    import utils
+  File "/home/advaiths/clip-slcd/MixVPR/utils/__init__.py", line 2, in <module>
+    from .validation import get_validation_recalls
+  File "/home/advaiths/clip-slcd/MixVPR/utils/validation.py", line 2, in <module>
+    import faiss
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/faiss/__init__.py", line 18, in <module>
+    from .loader import *
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/faiss/loader.py", line 65, in <module>
+    from .swigfaiss import *
+  File "/home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/faiss/swigfaiss.py", line 13, in <module>
+    from . import _swigfaiss
+ImportError: /lib64/libstdc++.so.6: version `GLIBCXX_3.4.26' not found (required by /home/advaiths/miniconda3/envs/clip/lib/python3.9/site-packages/faiss/../../../libfaiss.so)
