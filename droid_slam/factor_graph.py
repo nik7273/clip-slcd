@@ -7,15 +7,18 @@ from lietorch import SE3
 from modules.corr import CorrBlock, AltCorrBlock
 import geom.projective_ops as pops
 
+from similarity import add_edges
+
 
 class FactorGraph:
-    def __init__(self, video, update_op, device="cuda:0", corr_impl="volume", max_factors=-1, upsample=False):
+    def __init__(self, video, update_op, datapath=None, device="cuda:0", corr_impl="volume", max_factors=-1, upsample=False):
         self.video = video
         self.update_op = update_op
         self.device = device
         self.max_factors = max_factors
         self.corr_impl = corr_impl
         self.upsample = upsample
+        self.datapath = datapath
 
         # operator at 1/8 resolution
         self.ht = ht = video.ht // 8
@@ -309,7 +312,7 @@ class FactorGraph:
         self.add_factors(ii[keep], jj[keep])
 
     
-    def add_proximity_factors(self, t0=0, t1=0, rad=2, nms=2, beta=0.25, thresh=16.0, remove=False):
+    def add_proximity_factors(self, t0=0, t1=0, rad=2, nms=2, beta=0.25, thresh=16.0, remove=False, backend=False):
         """ add edges to the factor graph based on distance """
 
         t = self.video.counter.value
@@ -373,4 +376,36 @@ class FactorGraph:
                             d[(i1-t0)*(t-t1) + (j1-t1)] = np.inf
 
         ii, jj = torch.as_tensor(es, device=self.device).unbind(dim=-1)
+        
+        
+        # if self.datapath is not None:
+        #     extra_edges = add_edges(self.datapath)
+        #     idxs = np.where(np.array(extra_edges)==t) # idxs[0] is the row number
+        #     if idxs[0].shape[0]>0:
+        #         sel_edges = torch.tensor(extra_edges, device=self.device)[idxs[0], :].reshape(-1, 2)
+        #         ii = torch.cat((ii.reshape(-1, 1), sel_edges[:, 0].reshape(-1, 1)), axis=0).reshape(-1)
+        #         jj = torch.cat((jj.reshape(-1, 1), sel_edges[:, 1].reshape(-1, 1)),axis=0).reshape(-1)
+        
+        
+        # if not backend:
+        #     #FIXME:add extra edge for test
+        #     j_max = torch.max(jj)
+        #     extra_edges = 3
+        #     unique_ii = torch.unique(ii)
+            
+        #     torch.manual_seed(10)
+            
+        #     perm = torch.randperm(unique_ii.shape[0],device=self.device)
+        #     new_ii = unique_ii[perm[:extra_edges]]
+        #     # new_ii = unique_ii[:extra_edges]
+        #     new_ii = new_ii[new_ii!=j_max]
+
+        #     # extra_ii = torch.as_tensor(new_ii,device=self.device).reshape(-1, 1)
+        #     # extra_jj = torch.tensor([j_max]*new_ii.shape[0],device=self.device).reshape(-1, 1)
+
+        #     extra_ii = torch.cat((torch.as_tensor(new_ii,device=self.device).reshape(-1, 1), torch.tensor([j_max]*new_ii.shape[0],device=self.device).reshape(-1, 1)), axis=0).reshape(-1, 1)
+        #     extra_jj = torch.cat((torch.tensor([j_max]*new_ii.shape[0],device=self.device).reshape(-1, 1),torch.as_tensor(new_ii,device=self.device).reshape(-1, 1)), axis=0).reshape(-1, 1)
+        #     ii = torch.cat((ii.reshape(-1, 1), extra_ii), axis=0).reshape(-1)
+        #     jj = torch.cat((jj.reshape(-1, 1), extra_jj),axis=0).reshape(-1)
+        
         self.add_factors(ii, jj, remove)

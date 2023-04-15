@@ -1,0 +1,7 @@
+WARNING: combining -O with -r or -p will mean that all downloaded content
+will be placed in the single file you specified.
+
+--2023-04-14 20:46:32--  https://tartanair.blob.core.windows.net/tartanair-release1/gascola/Hard/seg_left.zip
+Resolving tartanair.blob.core.windows.net (tartanair.blob.core.windows.net)... 52.239.169.4
+Connecting to tartanair.blob.core.windows.net (tartanair.blob.core.windows.net)|52.239.169.4|:443... connected.
+HTTP request sent, awaiting response... 

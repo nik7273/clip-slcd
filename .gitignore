@@ -9,7 +9,7 @@ __pycache__/
 # dataset or other stuff
 datasets/
 data/
-reconstruction/
+reconstructions/
 *.pdf
 
 # Distribution / packaging

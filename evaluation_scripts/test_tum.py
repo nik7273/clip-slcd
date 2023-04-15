@@ -21,7 +21,7 @@ def show_image(image):
     cv2.imshow('image', image / 255.0)
     cv2.waitKey(0)
 
-def image_stream(datapath, image_size=[320, 512]):
+def image_stream(datapath, stride=1,image_size=[320, 512]):
     """ image generator """
 
     fx, fy, cx, cy = 517.3, 516.5, 318.6, 255.3
@@ -31,7 +31,7 @@ def image_stream(datapath, image_size=[320, 512]):
 
 
     # read all png images in folder
-    images_list = sorted(glob.glob(os.path.join(datapath, 'rgb', '*.png')))[::2]
+    images_list = sorted(glob.glob(os.path.join(datapath, 'rgb', '*.png')))[::stride]
     
     for t, imfile in enumerate(images_list):
         image = cv2.imread(imfile)
@@ -52,10 +52,31 @@ def image_stream(datapath, image_size=[320, 512]):
         image = image[:, 8:-8, 16:-16]
 
         yield t, image[None], intrinsics
+        
+def save_reconstruction(droid, reconstruction_path):
+
+    from pathlib import Path
+    import random
+    import string
+
+    t = droid.video.counter.value
+    tstamps = droid.video.tstamp[:t].cpu().numpy()
+    images = droid.video.images[:t].cpu().numpy()
+    disps = droid.video.disps_up[:t].cpu().numpy()
+    poses = droid.video.poses[:t].cpu().numpy()
+    intrinsics = droid.video.intrinsics[:t].cpu().numpy()
+
+    Path("reconstructions/{}".format(reconstruction_path)).mkdir(parents=True, exist_ok=True)
+    np.save("reconstructions/{}/tstamps.npy".format(reconstruction_path), tstamps)
+    np.save("reconstructions/{}/images.npy".format(reconstruction_path), images)
+    np.save("reconstructions/{}/disps.npy".format(reconstruction_path), disps)
+    np.save("reconstructions/{}/poses.npy".format(reconstruction_path), poses)
+    np.save("reconstructions/{}/intrinsics.npy".format(reconstruction_path), intrinsics)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--datapath", default="datasets/TUM-RGBD/rgbd_dataset_freiburg1_360")
+    parser.add_argument("--datapath", default="datasets/TUM-RGBD/rgbd_dataset_freiburg1_room")
     parser.add_argument("--weights", default="droid.pth")
     parser.add_argument("--buffer", type=int, default=512)
     parser.add_argument("--image_size", default=[240, 320])
@@ -74,6 +95,7 @@ if __name__ == '__main__':
     parser.add_argument("--backend_thresh", type=float, default=15.0)
     parser.add_argument("--backend_radius", type=int, default=2)
     parser.add_argument("--backend_nms", type=int, default=3)
+    parser.add_argument("--reconstruction_path", help="path to saved reconstruction", default='tum3d_room_extra')
     args = parser.parse_args()
 
     args.stereo = False
@@ -81,18 +103,27 @@ if __name__ == '__main__':
 
     print("Running evaluation on {}".format(args.datapath))
     print(args)
+    stride = 2
 
     droid = Droid(args)
     time.sleep(5)
 
     tstamps = []
-    for (t, image, intrinsics) in tqdm(image_stream(args.datapath)):
+    for (t, image, intrinsics) in tqdm(image_stream(args.datapath, stride=stride)):
         # if not args.disable_vis:
-        #     show_image(image)
+            # show_image(image)
         droid.track(t, image, intrinsics=intrinsics)
+        
+    # if args.reconstruction_path is not None:
+    #     save_reconstruction(droid, args.reconstruction_path)
 
-
-    traj_est = droid.terminate(image_stream(args.datapath))
+    traj_est = droid.terminate(image_stream(args.datapath, stride=stride))
+    
+    # #FIXME: temporarily for saving
+    # from pathlib import Path
+    # Path("reconstructions/{}".format(args.reconstruction_path)).mkdir(parents=True, exist_ok=True)
+    # np.save("reconstructions/{}/poses.npy".format(args.reconstruction_path), traj_est)
+    
 
     ### run evaluation ###
 
@@ -106,8 +137,9 @@ if __name__ == '__main__':
     from evo.core.metrics import PoseRelation
 
     image_path = os.path.join(args.datapath, 'rgb')
-    images_list = sorted(glob.glob(os.path.join(image_path, '*.png')))[::2]
+    images_list = sorted(glob.glob(os.path.join(image_path, '*.png')))[::stride]
     tstamps = [float(x.split('/')[-1][:-4]) for x in images_list]
+    
 
     traj_est = PoseTrajectory3D(
         positions_xyz=traj_est[:,:3],
@@ -118,8 +150,9 @@ if __name__ == '__main__':
     traj_ref = file_interface.read_tum_trajectory_file(gt_file)
 
     traj_ref, traj_est = sync.associate_trajectories(traj_ref, traj_est)
+    
     result = main_ape.ape(traj_ref, traj_est, est_name='traj', 
-        pose_relation=PoseRelation.translation_part, align=True, correct_scale=True)
+        pose_relation=PoseRelation.translation_part, align=True, correct_scale=True, save_path=args.reconstruction_path)
 
 
     print(result)

@@ -94,6 +94,7 @@ if __name__ == '__main__':
     parser.add_argument("--frontend_window", type=int, default=20)
     parser.add_argument("--frontend_radius", type=int, default=2)
     parser.add_argument("--frontend_nms", type=int, default=1)
+    parser.add_argument("--upsample", action="store_true")
 
     parser.add_argument("--backend_thresh", type=float, default=24.0)
     parser.add_argument("--backend_radius", type=int, default=2)

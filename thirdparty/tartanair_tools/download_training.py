@@ -1,3 +1,5 @@
+#!/usr/bin/env python2
+
 from os import system, mkdir
 import argparse
 from os.path import isdir, isfile

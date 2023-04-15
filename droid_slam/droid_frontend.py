@@ -10,7 +10,7 @@ class DroidFrontend:
     def __init__(self, net, video, args):
         self.video = video
         self.update_op = net.update
-        self.graph = FactorGraph(video, net.update, max_factors=48, upsample=args.upsample)
+        self.graph = FactorGraph(video, net.update, args.datapath, max_factors=48, upsample=args.upsample)
 
         # local optimization window
         self.t0 = 0
@@ -73,6 +73,7 @@ class DroidFrontend:
 
         # update visualization
         self.video.dirty[self.graph.ii.min():self.t1] = True
+        
 
     def __initialize(self):
         """ initialize the SLAM system """

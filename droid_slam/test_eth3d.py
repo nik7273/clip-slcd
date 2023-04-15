@@ -57,7 +57,7 @@ def image_stream(datapath, use_depth=False, stride=1):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--datapath", default='datasets/ETH3D-SLAM/large_loop_2')
+    parser.add_argument("--datapath")
     parser.add_argument("--weights", default="droid.pth")
     parser.add_argument("--buffer", type=int, default=1024)
     parser.add_argument("--image_size", default=[240, 320])
@@ -71,7 +71,6 @@ if __name__ == '__main__':
     parser.add_argument("--frontend_window", type=int, default=16)
     parser.add_argument("--frontend_radius", type=int, default=1)
     parser.add_argument("--frontend_nms", type=int, default=0)
-    parser.add_argument("--upsample", action="store_true")
 
     parser.add_argument("--stereo", action="store_true")
     parser.add_argument("--depth", action="store_true")
@@ -88,20 +87,18 @@ if __name__ == '__main__':
 
     # this can usually be set to 2-3 except for "camera_shake" scenes
     # set to 2 for test scenes
-    stride = 2
+    stride = 1
 
     tstamps = []
-    # flag=True
-    # FIXME: do not use depth info
-    for (t, image, intrinsics) in tqdm(image_stream(args.datapath, use_depth=False, stride=stride)):
-        # if not args.disable_vis:
-        #     show_image(image[0])
+    for (t, image, depth, intrinsics) in tqdm(image_stream(args.datapath, use_depth=True, stride=stride)):
+        if not args.disable_vis:
+            show_image(image[0])
+
         if t == 0:
             args.image_size = [image.shape[2], image.shape[3]]
             droid = Droid(args)
-            flag=False
-            torch.cuda.empty_cache()
-        droid.track(t, image, intrinsics=intrinsics)
+        
+        droid.track(t, image, depth, intrinsics=intrinsics)
     
     traj_est = droid.terminate(image_stream(args.datapath, use_depth=False, stride=stride))
 

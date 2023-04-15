@@ -39,7 +39,7 @@ class Droid:
             self.visualizer.start()
 
         # post processor - fill in poses for non-keyframes
-        self.traj_filler = PoseTrajectoryFiller(self.net, self.video)
+        self.traj_filler = PoseTrajectoryFiller(self.net, self.video, datapath=self.args.datapath)
 
 
     def load_weights(self, weights):
@@ -76,6 +76,7 @@ class Droid:
 
         del self.frontend
 
+        # FIXME: comment for debug
         torch.cuda.empty_cache()
         print("#" * 32)
         self.backend(7)
@@ -86,4 +87,24 @@ class Droid:
 
         camera_trajectory = self.traj_filler(stream)
         return camera_trajectory.inv().data.cpu().numpy()
+    
+    def save_reconstruction(self, reconstruction_path):
+
+        from pathlib import Path
+        import random
+        import string
+
+        t = self.video.counter.value
+        tstamps = self.video.tstamp[:t].cpu().numpy()
+        images = self.video.images[:t].cpu().numpy()
+        disps = self.video.disps_up[:t].cpu().numpy()
+        poses = self.video.poses[:t].cpu().numpy()
+        intrinsics = self.video.intrinsics[:t].cpu().numpy()
+
+        Path("reconstructions/{}".format(reconstruction_path)).mkdir(parents=True, exist_ok=True)
+        np.save("reconstructions/{}/tstamps.npy".format(reconstruction_path), tstamps)
+        np.save("reconstructions/{}/images.npy".format(reconstruction_path), images)
+        np.save("reconstructions/{}/disps.npy".format(reconstruction_path), disps)
+        np.save("reconstructions/{}/poses.npy".format(reconstruction_path), poses)
+        np.save("reconstructions/{}/intrinsics.npy".format(reconstruction_path), intrinsics)
 

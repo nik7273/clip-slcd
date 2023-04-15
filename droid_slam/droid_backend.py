@@ -10,6 +10,7 @@ class DroidBackend:
     def __init__(self, net, video, args):
         self.video = video
         self.update_op = net.update
+        self.datapath = args.datapath
 
         # global optimization window
         self.t0 = 0
@@ -29,12 +30,13 @@ class DroidBackend:
         if not self.video.stereo and not torch.any(self.video.disps_sens):
              self.video.normalize()
 
-        graph = FactorGraph(self.video, self.update_op, corr_impl="alt", max_factors=16*t, upsample=self.upsample)
+        graph = FactorGraph(self.video, self.update_op, self.datapath, corr_impl="alt", max_factors=16*t, upsample=self.upsample)
 
         graph.add_proximity_factors(rad=self.backend_radius, 
                                     nms=self.backend_nms, 
                                     thresh=self.backend_thresh, 
-                                    beta=self.beta)
+                                    beta=self.beta,
+                                    backend=False)
 
         graph.update_lowmem(steps=steps)
         graph.clear_edges()
