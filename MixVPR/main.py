@@ -250,7 +250,8 @@ class VPRModel(pl.LightningModule):
                 loss_name='MultiSimilarityLoss', 
                 miner_name='MultiSimilarityMiner', 
                 miner_margin=0.1,
-                faiss_gpu=False
+                faiss_gpu=False, 
+                superpoint_weights='./'
                  ):
         super().__init__()
         self.encoder_arch = backbone_arch
@@ -302,6 +303,8 @@ class VPRModel(pl.LightningModule):
         self.backbone = helper.get_backbone(backbone_arch, pretrained, layers_to_freeze, layers_to_crop)
 
         self.spatial_backbone = SuperPoint({'nms_radius': 4, 'keypoint_threshold': 0.005, 'max_keypoints': 1000})
+        #load the weights for superpoint 
+        self.spatial_backbone.load_state_dict(torch.load(os.path.join(superpoint_weights)))
 
         self.activation = {}
         
