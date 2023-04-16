@@ -1,0 +1,139 @@
+agg_arch: MixVPR
+agg_config:
+  in_channels: 1024
+  in_h: 20
+  in_w: 20
+  mix_depth: 4
+  mlp_ratio: 1
+  out_channels: 1024
+  out_rows: 4
+backbone_arch: resnet50
+batch_sampler: null
+batch_size: 16
+faiss_gpu: false
+image_size: !!python/tuple
+- 320
+- 320
+img_per_place: 2
+layers_to_crop:
+- 4
+layers_to_freeze: 2
+llm_transform: !!python/object:torchvision.transforms.transforms.Compose
+  transforms:
+  - !!python/object:torchvision.transforms.transforms.Resize
+    _backward_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _buffers: !!python/object/apply:collections.OrderedDict
+    - []
+    _forward_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _forward_pre_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _is_full_backward_hook: null
+    _load_state_dict_post_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _load_state_dict_pre_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _modules: !!python/object/apply:collections.OrderedDict
+    - []
+    _non_persistent_buffers_set: !!set {}
+    _parameters: !!python/object/apply:collections.OrderedDict
+    - []
+    _state_dict_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    antialias: null
+    interpolation: !!python/object/apply:torchvision.transforms.functional.InterpolationMode
+    - bicubic
+    max_size: null
+    size: 224
+    training: true
+  - !!python/object:torchvision.transforms.transforms.CenterCrop
+    _backward_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _buffers: !!python/object/apply:collections.OrderedDict
+    - []
+    _forward_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _forward_pre_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _is_full_backward_hook: null
+    _load_state_dict_post_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _load_state_dict_pre_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _modules: !!python/object/apply:collections.OrderedDict
+    - []
+    _non_persistent_buffers_set: !!set {}
+    _parameters: !!python/object/apply:collections.OrderedDict
+    - []
+    _state_dict_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    size: !!python/tuple
+    - 224
+    - 224
+    training: true
+  - !!python/name:clip.clip._convert_image_to_rgb ''
+  - !!python/object:torchvision.transforms.transforms.ToTensor {}
+  - !!python/object:torchvision.transforms.transforms.Normalize
+    _backward_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _buffers: !!python/object/apply:collections.OrderedDict
+    - []
+    _forward_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _forward_pre_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _is_full_backward_hook: null
+    _load_state_dict_post_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _load_state_dict_pre_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    _modules: !!python/object/apply:collections.OrderedDict
+    - []
+    _non_persistent_buffers_set: !!set {}
+    _parameters: !!python/object/apply:collections.OrderedDict
+    - []
+    _state_dict_hooks: !!python/object/apply:collections.OrderedDict
+    - []
+    inplace: false
+    mean: !!python/tuple
+    - 0.48145466
+    - 0.4578275
+    - 0.40821073
+    std: !!python/tuple
+    - 0.26862954
+    - 0.26130258
+    - 0.27577711
+    training: true
+loss_name: MultiSimilarityLoss
+lr: 0.05
+lr_mult: 0.3
+mean_std:
+  mean:
+  - 0.485
+  - 0.456
+  - 0.406
+  std:
+  - 0.229
+  - 0.224
+  - 0.225
+milestones:
+- 5
+- 10
+- 15
+- 25
+- 45
+min_img_per_place: 2
+miner_margin: 0.1
+miner_name: MultiSimilarityMiner
+momentum: 0.9
+num_workers: 28
+optimizer: sgd
+pretrained: true
+random_sample_from_each_place: true
+show_data_stats: true
+shuffle_all: true
+val_set_names:
+- hloc
+warmpup_steps: 650
+weight_decay: 0.001

@@ -160,5 +160,6 @@ cache
 *.o
 data
 figures/*.pdf
-
-
+datasets/
+rgbd_*
+thirdparty/
