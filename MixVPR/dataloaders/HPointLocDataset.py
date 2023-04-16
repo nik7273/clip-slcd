@@ -73,6 +73,7 @@ class HPointLocDataset(Dataset):
             place_fname = self.filenames[idx] # assumption is that folder ONLY contains relevant .hdf5 files
             place_file = h5py.File(place_fname, 'r')
             place = np.array(place_file['rgb'])
+            untouched = place.copy()
             if self.imgs_per_place < place.shape[0]:
                 #randomly choose self.imgs_per_place images 
                 choices = np.random.choice(np.arange(place.shape[0]), self.imgs_per_place, replace=False)
@@ -83,16 +84,18 @@ class HPointLocDataset(Dataset):
             label = torch.tensor([idx]).repeat(self.imgs_per_place) # wtf???
             llm_place = []
             place_list = []
+            untouched_list = []
             for p in place:
                 tmp = T.ToPILImage()(p).convert('RGB')
                 tmp2 = self.transform(tmp)
-
+                untouched_list.append(T.ToTensor()(p).unsqueeze(0))
                 place_list.append(tmp2.unsqueeze(0))
                 llm_place.append(self.llm_transform(tmp).unsqueeze(0))
             llm_place = torch.cat(llm_place, dim=0)
             place = torch.cat(place_list, dim=0)
+            untouched = torch.cat(untouched_list, dim=0)
             place_file.close()
-            return place, llm_place, label
+            return place, llm_place, untouched, label
         elif self.split == 'val':
             place_idx = self.place_count[idx] #get the place idx 
             place_fname = self.filenames[place_idx] # assumption is that folder ONLY contains relevant .hdf5 files

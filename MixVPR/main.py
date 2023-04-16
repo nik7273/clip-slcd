@@ -6,6 +6,7 @@ from torch.optim import lr_scheduler, optimizer
 import utils
 import torchvision.transforms as T
 import clip
+from segment_anything import SamAutomaticMaskGenerator, sam_model_registry
 
 # from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
 from dataloaders.HPointLocDataloader import HPointLocDataModule
@@ -77,7 +78,9 @@ class VPRModel(pl.LightningModule):
         self.faiss_gpu = faiss_gpu
         # perfect inekf
         # adjoint purpose
-        
+
+        self.sam = sam_model_registry["vit_b"](checkpoint="/home/advaith/Documents/530_final_proj/sam_vit_b_01ec64.pth")
+        self.mask_generator = SamAutomaticMaskGenerator(self.sam)
         
         # ----------------------------------
         # get the backbone and the aggregator
@@ -85,6 +88,8 @@ class VPRModel(pl.LightningModule):
 
         self.activation = {}
         
+        #import a deeplabv3 model from pytorch hub 
+     
 
         self.llm, self.llm_preprocess = clip.load("RN50", device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
         self.llm.visual.layer1.register_forward_hook(self.get_activation('layer1'))
@@ -99,7 +104,7 @@ class VPRModel(pl.LightningModule):
         return hook
     
     # the forward pass of the lightning model
-    def forward(self, x, llm_x):
+    def forward(self, x, llm_x, untouched):
         #create a for loop going through the batch dimension 
         #in the for loop convert each image to a PIL image 
         #then pass it through the llm model
@@ -107,17 +112,20 @@ class VPRModel(pl.LightningModule):
         #then pass it through the aggregator
         #return the output
         
+        for img in untouched:
+            masks = self.mask_generator.generate(img)
+
         # llm_in  = torch.cat(llm_in )
         with torch.no_grad():
             llm_feat = self.llm.encode_image(llm_x)
         llm_feat = llm_feat.detach()
-        # x = self.backbone(x)
+        x = self.backbone(x)
 
         #resize pytorch tensor to BxCx20x20
         llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
-        # x = torch.cat([x, llm_feat], dim=1)
-        # x = self.aggregator(x)
-        x = self.aggregator(llm_feat)
+        x = torch.cat([x, llm_feat], dim=1)
+        x = self.aggregator(x)
+        # x = self.aggregator(llm_feat)
         return x
     
     # configure the optimizer 
@@ -184,7 +192,7 @@ class VPRModel(pl.LightningModule):
     
     # This is the training step that's executed at each iteration
     def training_step(self, batch, batch_idx):
-        places, llm_places, labels = batch
+        places, llm_places, untouched, labels = batch
         
         # Note that GSVCities yields places (each containing N images)
         # which means the dataloader will return a batch containing BS places
@@ -193,10 +201,11 @@ class VPRModel(pl.LightningModule):
         # reshape places and labels
         images = places.view(BS*N, ch, h, w)
         llm_images = llm_places.flatten(0,1)
+        untouched = untouched.flatten(0,1)
         labels = labels.view(-1)
 
         # Feed forward the batch to the model
-        descriptors = self(images, llm_images) # Here we are calling the method forward that we defined above
+        descriptors = self(images, llm_images, untouched) # Here we are calling the method forward that we defined above
         loss = self.loss_function(descriptors, labels) # Call the loss_function we defined above
         
         self.log('loss', loss.item(), logger=True)
