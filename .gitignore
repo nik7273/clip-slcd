@@ -2,3 +2,4 @@ __pycache__/*
 rgbd_dataset_*
 *.png
 Hierarchical-Localization/third_party/
+Hierarchical-Localization/datasets/
