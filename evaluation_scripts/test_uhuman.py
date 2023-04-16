@@ -1,4 +1,6 @@
 import sys
+
+from MixVPR.main import VPRModel
 sys.path.append('droid_slam')
 
 from tqdm import tqdm
@@ -10,9 +12,11 @@ import os
 import glob 
 import time
 import argparse
-
 import torch.nn.functional as F
+import torchvision
 from droid import Droid
+import networkx as nx
+import matplotlib.pyplot as plt
 
 
 def show_image(image):
@@ -84,12 +88,41 @@ if __name__ == '__main__':
     droid = Droid(args)
     time.sleep(5)
 
+
+    
     tstamps = []
+    similar_indices = []
+    i = 0
     for (t, image, intrinsics) in tqdm(image_stream(args.datapath)):
+        i += 1
         # if not args.disable_vis:
         #     show_image(image)
         droid.track(t, image, intrinsics=intrinsics)
+        # print(f"Shape: {image.shape}\nType: {type(image)}")
+        pil_img = torchvision.transforms.ToPILImage()(image.squeeze())  
+        im_feat = droid.clipvpr_encoder(
+            droid.clipvpr_encoder.tf_vpr(image).to(torch.device('cuda:0')),
+            droid.clipvpr_encoder.llm_preprocess(pil_img).unsqueeze(0).to(torch.device('cuda:0'))
+        )
+        # print(im_feat.shape)
+        droid.clipvpr_encoder.faiss_index.add(im_feat.cpu().detach().numpy())
+        # G.add_nodes_from([t])
+        if i > 0:
+            D, I = droid.clipvpr_encoder.faiss_index.search(im_feat.cpu().detach().numpy(), 3)
+            # print(f"Distance: {D}\nIndices: {I}")
 
+            #filter the indices so that they are not within 10 frames of t 
+            I = I[0][np.where(np.abs(I[0] - i) > 50)]
+            print(I.tolist())
+            similar_indices.append(I.tolist())
+        
+
+    #create a dict with the keys as the indices and the values as the elements of similar_indices 
+    d = {}
+    for i in range(len(similar_indices)):
+        d[i] = similar_indices[i]
+
+    
 
     traj_est = droid.terminate(image_stream(args.datapath))
 
@@ -116,10 +149,17 @@ if __name__ == '__main__':
     gt_file = os.path.join(args.datapath, 'poses.txt')
     traj_ref = file_interface.read_tum_trajectory_file(gt_file)
 
+    G = nx.Graph(d)
+    pos = {}
+    for i in range(traj_est.positions_xyz.shape[0]): 
+        pose = traj_est.positions_xyz[i]
+        pos[i] = (pose[0], pose[1])
+    nx.draw(G, pos, with_labels=True)
+    plt.show()
+
     traj_ref, traj_est = sync.associate_trajectories(traj_ref, traj_est)
     result = main_ape.ape(traj_ref, traj_est, est_name='traj', 
         pose_relation=PoseRelation.translation_part, align=True, correct_scale=True, save_path=args.reconstruction_path)
 
 
     print(result)
-

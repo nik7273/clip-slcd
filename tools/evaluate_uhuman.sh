@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-UHUMAN_PATH=/media/jimmy/TOSHIBA\ EXT/Data_Set/uhumans/apartment_scene
+UHUMAN_PATH=/home/nikhil/Documents/rob_530/clip-slcd/datasets/uhumans
 
 evalset=(
     left_images
@@ -9,6 +9,6 @@ evalset=(
 
 for seq in ${evalset[@]}; do
     echo $seq
-    python evaluation_scripts/test_uhuman.py --datapath=$UHUMAN_PATH/$seq --weights=droid.pth --reconstruction_path=uhuman_apartment$@
+    python evaluation_scripts/test_uhuman.py --datapath=$UHUMAN_PATH/$seq --weights=droid.pth --reconstruction_path=uhuman_apartment $@
 done
 

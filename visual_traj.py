@@ -22,16 +22,16 @@ import torch.nn.functional as F
 
 
 if __name__ == '__main__':
-    datapath = 'datasets/TUM-RGBD/rgbd_dataset_freiburg1_room'
-    path_norm = 'reconstructions/tum3d_room_norm'
-    path_extra = 'reconstructions/tum3d_room_extra'
+    datapath = '/home/nikhil/Documents/rob_530/clip-slcd/datasets/uhumans/left_images'
+    path_norm = 'reconstructions/uhuman_apartment' # tum3d_room_norm'
+    # path_extra = 'reconstructions/uhuman_apartment_extra/' #tum3d_room_extra'
     
     traj_gt = np.load(os.path.join(path_norm, 'poses_ref.npy'))
-    traj_norm = np.load(os.path.join(path_norm, 'poses_est_unop.npy'))
-    traj_extra = np.load(os.path.join(path_extra, 'poses_est_unop.npy'))
-    traj_extra_op = np.load(os.path.join(path_extra, 'poses_est.npy'))
-    time_norm_idx = np.load(os.path.join(path_norm, 'tstamps.npy'))
-    time_extra_idx = np.load(os.path.join(path_extra, 'tstamps.npy'))
+    traj_norm = np.load(os.path.join(path_norm, 'poses_est.npy'))
+    # traj_extra = np.load(os.path.join(path_extra, 'poses_est_unop.npy'))
+    # traj_extra_op = np.load(os.path.join(path_extra, 'poses_est.npy'))
+    # time_norm_idx = np.load(os.path.join(path_norm, 'tstamps.npy'))
+    # time_extra_idx = np.load(os.path.join(path_extra, 'tstamps.npy'))
     
     # image_path = os.path.join(datapath, 'rgb')
     # images_list = sorted(glob.glob(os.path.join(image_path, '*.png')))[::2]
@@ -60,13 +60,13 @@ if __name__ == '__main__':
     
     gt_range = np.max(traj_gt, axis=0) - np.min(traj_gt, axis=0)
     norm_range = np.max(traj_norm, axis=0) - np.min(traj_norm, axis=0)
-    extra_range = np.max(traj_extra, axis=0) - np.min(traj_extra, axis=0)
+    # extra_range = np.max(traj_extra, axis=0) - np.min(traj_extra, axis=0)
     
     
     ax = plt.figure().add_subplot(projection='3d')
     ax.plot(traj_norm[:, 0], traj_norm[:, 1], traj_norm[:, 2], color='r', marker='o', label='Prediction without extra edge')
-    ax.plot(traj_extra[:, 0], traj_extra[:, 1], traj_extra[:, 2], color='b', marker='o', label='Prediction with extra edge')
-    ax.plot(traj_extra_op[:, 0], traj_extra_op[:, 1], traj_extra_op[:, 2], color='m', marker='o', label='Prediction with extra edge (optimize)')
+    # ax.plot(traj_extra[:, 0], traj_extra[:, 1], traj_extra[:, 2], color='b', marker='o', label='Prediction with extra edge')
+    # ax.plot(traj_extra_op[:, 0], traj_extra_op[:, 1], traj_extra_op[:, 2], color='m', marker='o', label='Prediction with extra edge (optimize)')
     ax.plot(traj_gt[:, 0], traj_gt[:, 1], traj_gt[:, 2], color='g', marker='o', label='Ground Truth')
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
