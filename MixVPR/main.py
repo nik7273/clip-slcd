@@ -3,14 +3,14 @@ import torch
 import numpy as np
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 from torch.optim import lr_scheduler, optimizer
-# import utils
+import utils
 import torchvision.transforms as T
 import clip
 import faiss
 
-# from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
-# from dataloaders.HPointLocDataloader import HPointLocDataModule
-from MixVPR.models import helper
+from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
+from dataloaders.HPointLocDataloader import HPointLocDataModule
+from models import helper
 
 # %BANNER_BEGIN%
 # ---------------------------------------------------------------------
@@ -147,8 +147,8 @@ class SuperPoint(nn.Module):
             c5, self.config['descriptor_dim'],
             kernel_size=1, stride=1, padding=0)
 
-        path = Path(__file__).parent / 'weights/superpoint_v1.pth'
-        self.load_state_dict(torch.load(str(path)))
+        # path = Path(__file__).parent / 'weights/superpoint_v1.pth'
+        # self.load_state_dict(torch.load(str(path)))
 
         mk = self.config['max_keypoints']
         if mk == 0 or mk < -1:
@@ -282,8 +282,8 @@ class VPRModel(pl.LightningModule):
         
         self.save_hyperparameters() # write hyperparams into a file
         
-        # self.loss_fn = utils.get_loss(loss_name)
-        # self.miner = utils.get_miner(miner_name, miner_margin)
+        self.loss_fn = utils.get_loss(loss_name)
+        self.miner = utils.get_miner(miner_name, miner_margin)
         self.batch_acc = [] # we will keep track of the % of trivial pairs/triplets at the loss level 
 
         # self.faiss_gpu = faiss_gpu
@@ -307,6 +307,9 @@ class VPRModel(pl.LightningModule):
         self.spatial_backbone.load_state_dict(torch.load(os.path.join(superpoint_weights)))
 
         self.activation = {}
+
+        self.spatial_conv1 = nn.Conv2d(256, 256, kernel_size=5)
+        self.spatial_conv2 = nn.Conv2d(256, 256, kernel_size=5)
         
 
         self.llm, self.llm_preprocess = clip.load("RN50", device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
@@ -333,16 +336,31 @@ class VPRModel(pl.LightningModule):
         # llm_in  = torch.cat(llm_in )
         with torch.no_grad():
             llm_feat = self.llm.encode_image(llm_x)
-            superpoints_dict = self.spatial_backbone(x)
+            data = {'image': T.Grayscale()(x)}
+            superpoints_dict = self.spatial_backbone(data)
         llm_feat = llm_feat.detach()
-        superpoints = superpoints_dict['descriptors'].detach()
-        print(superpoints.shape)
 
+        #go through all the batches from superpoints_dict 
+        N = x.shape[0]
+        spatial_feats = torch.zeros((x.shape[0], self.spatial_backbone.config['descriptor_dim'], x.shape[2], x.shape[3])).to(x.device)
+        for i in range(N):
+            kp = superpoints_dict['keypoints'][i]
+            desc = superpoints_dict['descriptors'][i]
+            
+            #using pytorch gather the indices in kp and populate spatial_feats[i] with desc 
+            spatial_feats[i, :, kp[:,1].to(torch.long), kp[:,0].to(torch.long)] = desc
+
+
+        spatial_feats = self.spatial_conv1(spatial_feats)
+        spatial_feats = nn.AvgPool2d(4)(spatial_feats)
+        spatial_feats = self.spatial_conv2(spatial_feats)
+        spatial_feats = nn.AvgPool2d(2)(spatial_feats)
         x = self.backbone(x)
 
         #resize pytorch tensor to BxCx20x20
+        spatial_feats = torch.nn.functional.interpolate(spatial_feats, size=(20, 20), mode='bilinear', align_corners=False)
         llm_feat = torch.nn.functional.interpolate(self.activation["layer3"], size=(20, 20), mode='bilinear', align_corners=False)
-        x = torch.cat([x, llm_feat], dim=1)
+        x = torch.cat([x, llm_feat, spatial_feats], dim=1)
         x = self.aggregator(x)
         return x
     
@@ -548,7 +566,7 @@ if __name__ == '__main__':
         #             'out_channels': 2048},
 
         agg_arch='MixVPR',
-        agg_config={'in_channels' : 2048, #change this to 1024 if no clip, but 2048 with clip 
+        agg_config={'in_channels' : 2048+256, #change this to 1024 if no clip, but 2048 with clip 
                 'in_h' : 20,
                 'in_w' : 20,
                 'out_channels' : 1024,
@@ -571,7 +589,8 @@ if __name__ == '__main__':
         loss_name='MultiSimilarityLoss',
         miner_name='MultiSimilarityMiner', # example: TripletMarginMiner, MultiSimilarityMiner, PairMarginMiner
         miner_margin=0.1,
-        faiss_gpu=False
+        faiss_gpu=False, 
+        superpoint_weights='/home/advaith/Documents/530_final_proj/superpoint_v1.pth'
     )
 
     val_set = 'hloc'
