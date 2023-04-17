@@ -58,7 +58,10 @@ class Droid:
 
         self.net.load_state_dict(state_dict)
         self.net.to("cuda:0").eval()
-        
+
+        # self.load_clipvpr_weights()
+    
+    def load_clipvpr_weights(self):
         self.clipvpr_encoder = VPRModel(
             #---- Encoder
             backbone_arch='resnet50',

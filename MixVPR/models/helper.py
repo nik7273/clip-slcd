@@ -1,6 +1,6 @@
 import numpy as np
-from models import aggregators
-from models import backbones
+from MixVPR.models import aggregators
+from MixVPR.models import backbones
 
 
 def get_backbone(backbone_arch='resnet50',

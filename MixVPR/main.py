@@ -3,14 +3,14 @@ import torch
 import numpy as np
 from pytorch_lightning.callbacks import Callback, ModelCheckpoint
 from torch.optim import lr_scheduler, optimizer
-import utils
+import MixVPR.utils as utils
 import torchvision.transforms as T
 import clip
 import faiss
 
-from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
-from dataloaders.HPointLocDataloader import HPointLocDataModule
-from models import helper
+# from MixVPR.dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
+# from MixVPR.dataloaders.HPointLocDataloader import HPointLocDataModule
+from MixVPR.models import helper
 
 # %BANNER_BEGIN%
 # ---------------------------------------------------------------------
