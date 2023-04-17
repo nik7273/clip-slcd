@@ -6,6 +6,7 @@ from torch.optim import lr_scheduler, optimizer
 import utils
 import torchvision.transforms as T
 import clip
+from matplotlib import pyplot as plt
 
 # from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
 from dataloaders.HPointLocDataloader import HPointLocDataModule
@@ -264,9 +265,9 @@ class VPRModel(pl.LightningModule):
                 raise NotImplemented
 
             
-            pitts_dict, predictions = utils.get_validation_recalls(r_list=r_list, 
+            pitts_dict, predictions, correct_list = utils.get_validation_recalls(r_list=r_list, 
                                                 q_list=q_list,
-                                                k_values=[1, 5, 10, 15, 20, 50, 100],
+                                                k_values=[1, 3, 5, 10, 15, 20, 50, 100],
                                                 gt=new_positives,
                                                 print_results=True,
                                                 dataset_name=val_set_name,
@@ -274,19 +275,21 @@ class VPRModel(pl.LightningModule):
                                                 )
             
             retrieved_images = []
-            for i in query_indices[:5]:
-                mini = [val_dataset[i]] 
+            inds = np.random.choice(correct_list, 5)
+            for i in inds:
+                mini = [val_dataset[i][0].cpu().numpy().transpose(1,2,0)] 
                 for j in predictions[i][:5]:
-                    mini.append(val_dataset[j])
+                    mini.append(val_dataset[j][0].cpu().numpy().transpose(1,2,0))
                 retrieved_images.append(mini)
             
             #create a subplot of 5 rows and 6 columns 
-            fig, ax = plt.subplots(5, 6, figsize=(20, 20))
+            fig, ax = plt.subplots(5, 6, figsize=(5, 6))
             #plot the images in retrived_images in each subplot 
             for i in range(5):
                 for j in range(6):
                     ax[i, j].imshow(retrieved_images[i][j])
                     ax[i, j].axis('off')
+            plt.savefig("retrieved.png")
             del r_list, q_list, feats, num_references, positives
 
             self.log(f'{val_set_name}/R1', pitts_dict[1], prog_bar=False, logger=True)
@@ -361,7 +364,8 @@ if __name__ == '__main__':
         miner_margin=0.1,
         faiss_gpu=False
     )
-
+    model.load_from_checkpoint('/home/advaith/Documents/530_final_proj/LOGS/resnet50/lightning_logs/our_version_works!/checkpoints/resnet50_epoch(78)_step(3555)_R1[0.9790]_R5[0.9925].ckpt')
+    # model.eval()
     val_set = 'hloc'
     datamodule = HPointLocDataModule(
         batch_size=32,
@@ -393,7 +397,7 @@ if __name__ == '__main__':
         accelerator='cuda', gpus=1,
         default_root_dir=f'./LOGS/{model.encoder_arch}', # Tensorflow can be used to viz 
 
-        num_sanity_val_steps=0, # runs a validation step before stating training
+        num_sanity_val_steps=-1, # runs a validation step before stating training
         precision=16, # we use half precision to reduce  memory usage
         max_epochs=80,
         check_val_every_n_epoch=1, # run validation every epoch
@@ -405,3 +409,4 @@ if __name__ == '__main__':
 
     # we call the trainer, we give it the model and the datamodule
     trainer.fit(model=model, datamodule=datamodule)
+    # trainer.validate(model=model)

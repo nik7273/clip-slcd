@@ -26,12 +26,15 @@ def get_validation_recalls(r_list, q_list, k_values, gt, print_results=True, fai
         
         
         # start calculating recall_at_k
+        correct_list = []
         correct_at_k = np.zeros(len(k_values))
         for q_idx, pred in enumerate(predictions):
             for i, n in enumerate(k_values):
                 # if in top N then also in top NN, where NN > N
+                
                 if np.any(np.in1d(pred[:n], gt[q_idx])):
                     correct_at_k[i:] += 1
+                    correct_list.append(q_idx)
                     break
         
         correct_at_k = correct_at_k / len(predictions)
@@ -44,4 +47,4 @@ def get_validation_recalls(r_list, q_list, k_values, gt, print_results=True, fai
             table.add_row(['Recall@K']+ [f'{100*v:.2f}' for v in correct_at_k])
             print(table.get_string(title=f"Performances on {dataset_name}"))
         
-        return d, predictions
+        return d, predictions, correct_list
