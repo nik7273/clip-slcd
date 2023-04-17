@@ -62,7 +62,7 @@ class HPointLocDataset(Dataset):
 
     def __len__(self):
         if self.split == 'train':
-            return       len(self.filenames)
+            return len(self.filenames)
         elif self.split == 'val':
             return len(self.image_indices)
     

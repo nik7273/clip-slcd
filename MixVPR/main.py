@@ -7,6 +7,7 @@ import utils
 import torchvision.transforms as T
 import clip
 import faiss
+from matplotlib import pyplot as plt 
 
 from dataloaders.GSVCitiesDataloader import GSVCitiesDataModule
 from dataloaders.HPointLocDataloader import HPointLocDataModule
@@ -286,7 +287,7 @@ class VPRModel(pl.LightningModule):
         self.miner = utils.get_miner(miner_name, miner_margin)
         self.batch_acc = [] # we will keep track of the % of trivial pairs/triplets at the loss level 
 
-        # self.faiss_gpu = faiss_gpu
+        self.faiss_gpu = faiss_gpu
         # res = faiss.StandardGpuResources()
         # flat_config = faiss.GpuIndexFlatConfig()
         # flat_config.useFloat16 = True
@@ -344,8 +345,8 @@ class VPRModel(pl.LightningModule):
         N = x.shape[0]
         spatial_feats = torch.zeros((x.shape[0], self.spatial_backbone.config['descriptor_dim'], x.shape[2], x.shape[3])).to(x.device)
         for i in range(N):
-            kp = superpoints_dict['keypoints'][i]
-            desc = superpoints_dict['descriptors'][i]
+            kp = superpoints_dict['keypoints'][i].detach()
+            desc = superpoints_dict['descriptors'][i].detach()
             
             #using pytorch gather the indices in kp and populate spatial_feats[i] with desc 
             spatial_feats[i, :, kp[:,1].to(torch.long), kp[:,0].to(torch.long)] = desc
@@ -509,7 +510,7 @@ class VPRModel(pl.LightningModule):
                 raise NotImplemented
 
             
-            pitts_dict = utils.get_validation_recalls(r_list=r_list, 
+            pitts_dict, predictions = utils.get_validation_recalls(r_list=r_list, 
                                                 q_list=q_list,
                                                 k_values=[1, 5, 10, 15, 20, 50, 100],
                                                 gt=new_positives,
@@ -517,6 +518,21 @@ class VPRModel(pl.LightningModule):
                                                 dataset_name=val_set_name,
                                                 faiss_gpu=self.faiss_gpu
                                                 )
+            
+            retrieved_images = []
+            for i in query_indices[:5]:
+                mini = [val_dataset[i]] 
+                for j in predictions[i][:5]:
+                    mini.append(val_dataset[j])
+                retrieved_images.append(mini)
+            
+            #create a subplot of 5 rows and 6 columns 
+            fig, ax = plt.subplots(5, 6, figsize=(20, 20))
+            #plot the images in retrived_images in each subplot 
+            for i in range(5):
+                for j in range(6):
+                    ax[i, j].imshow(retrieved_images[i][j])
+                    ax[i, j].axis('off')
             del r_list, q_list, feats, num_references, positives
 
             self.log(f'{val_set_name}/R1', pitts_dict[1], prog_bar=False, logger=True)
@@ -593,6 +609,8 @@ if __name__ == '__main__':
         superpoint_weights='/home/advaith/Documents/530_final_proj/superpoint_v1.pth'
     )
 
+    #load model weights frm weight_path 
+    model.load_from_checkpoint('/home/advaith/Documents/530_final_proj/LOGS/resnet50/lightning_logs/version_112/checkpoints/resnet50_epoch(02)_step(0069)_R1[0.9386]_R5[0.9731].ckpt')
     val_set = 'hloc'
     datamodule = HPointLocDataModule(
         batch_size=32,
@@ -635,4 +653,5 @@ if __name__ == '__main__':
     )
 
     # we call the trainer, we give it the model and the datamodule
-    trainer.fit(model=model, datamodule=datamodule)
+    # trainer.fit(model=model, datamodule=datamodule)
+    trainer.validate_loop(model=model, datamodule=datamodule)
