@@ -2,7 +2,7 @@ import torch
 import lietorch
 import numpy as np
 from MixVPR.main import VPRModel
-
+import torchvision
 from droid_net import DroidNet
 from depth_video import DepthVideo
 from motion_filter import MotionFilter
@@ -27,9 +27,11 @@ class Droid:
         # filter incoming frames so that there is enough motion
         self.filterx = MotionFilter(self.net, self.video, thresh=args.filter_thresh)
 
+        self.lcd_range = 50
         # frontend process
         self.frontend = DroidFrontend(self.net, self.video, self.args)
         
+        self.loop_candidates = {}
         # backend process
         self.backend = DroidBackend(self.net, self.video, self.args)
 
@@ -59,7 +61,7 @@ class Droid:
         self.net.load_state_dict(state_dict)
         self.net.to("cuda:0").eval()
 
-        # self.load_clipvpr_weights()
+        self.load_clipvpr_weights()
     
     def load_clipvpr_weights(self):
         self.clipvpr_encoder = VPRModel(
@@ -81,7 +83,7 @@ class Droid:
             #             'out_channels': 2048},
 
             agg_arch='MixVPR',
-            agg_config={'in_channels' : 2048, #change this to 1024 if no clip, but 2048 with clip 
+            agg_config={'in_channels' : 2048+256, #change this to 1024 if no clip, but 2048 with clip 
                     'in_h' : 20,
                     'in_w' : 20,
                     'out_channels' : 1024,
@@ -104,15 +106,55 @@ class Droid:
             loss_name='MultiSimilarityLoss',
             miner_name='MultiSimilarityMiner', # example: TripletMarginMiner, MultiSimilarityMiner, PairMarginMiner
             miner_margin=0.1,
-            faiss_gpu=False
+            faiss_gpu=False,
+            superpoint_weights='/home/nikhil/Downloads/superpoint_v1.pth',
         )
         self.clipvpr_encoder.to(torch.device('cuda:0'))
 
         #load the model weights from the mode_p[ath]
-        model_path = '/home/nikhil/Downloads/resnet50_epoch(78)_step(3555)_R1[0.9790]_R5[0.9925].ckpt'
+        model_path = '/home/nikhil/Downloads/superpts1.ckpt'
+        # model_path ='/home/nikhil/Downloads/resnet50_epoch(78)_step(3555)_R1[0.9790]_R5[0.9925].ckpt'
+        # self.clipvpr_encoder.load_from_checkpoint(model_path)
         self.clipvpr_encoder.load_state_dict(torch.load(model_path)['state_dict'])
         self.clipvpr_encoder.to(torch.device('cuda:0')).eval()
 
+
+    def check_loop_candidates(self, image, i):        
+        pil_img = torchvision.transforms.ToPILImage()(image.squeeze())
+        # print(droid.clipv=pr_encoder.llm.device()) 
+        im_feat = self.clipvpr_encoder(
+            self.clipvpr_encoder.tf_vpr(image).to(torch.device('cuda:0')),
+            self.clipvpr_encoder.llm_preprocess(pil_img).unsqueeze(0).to(torch.device('cuda:0')))
+        # print(im_feat.shape)
+        #add into faiss_index with a specified index 
+        if torch.any(i == self.video.tstamp):            
+            self.clipvpr_encoder.faiss_index.add_with_ids(im_feat.cpu().detach().numpy(), np.asarray([i]).astype(np.int64))
+            # droid.clipvpr_encoder.faiss_index.add(im_feat.cpu().detach().numpy())
+            # G.add_nodes_from([t])
+        if i > 0:
+            D, I = self.clipvpr_encoder.faiss_index.search(im_feat.cpu().detach().numpy(), 3)
+            # print(f"Distance: {D}\nIndices: {I}")
+
+            #TODO: need to add a check for the actual distance between features 
+
+            #filter the indices so that they are not within 10 frames of t 
+            I = I[0][np.where(np.abs(I[0] - i) > self.lcd_range)]
+            # print(I.tolist())
+            self.loop_candidates[i] = []
+            if len(I) > 0:
+                for j in I.tolist():
+                    if torch.any(j == self.video.tstamp): #check if the index is a keyframe
+                        self.loop_candidates[i] = I.tolist()
+                        jj = torch.tensor([j]).to(torch.device('cuda:0'))
+                        ii = torch.tensor([i]).to(torch.device('cuda:0')).repeat(len(jj))
+                        # ii_cat = torch.cat([ii, jj], dim=0)
+                        # jj_cat = torch.cat([jj, ii], dim=0)
+                        # droid.frontend.graph.print_edges()
+                        # self.frontend.graph.add_factors(ii, jj, remove=False)
+                        # self.frontend.graph.add_factors(ii_cat, jj_cat, remove=False)
+                        # droid.frontend.graph.print_edges()
+                        print("Added factors! UwU!", ii, jj)
+            
     def track(self, tstamp, image, depth=None, intrinsics=None):
         """ main thread - update map """
 
@@ -120,8 +162,14 @@ class Droid:
             # check there is enough motion
             self.filterx.track(tstamp, image, depth, intrinsics)
 
+            #loop closure detection and edge proposal 
+            self.check_loop_candidates(image, tstamp)
+
             # local bundle adjustment
-            self.frontend()
+            if tstamp > 0:
+                self.frontend(self.loop_candidates[tstamp])
+            else:
+                self.frontend()
 
             # global bundle adjustment
             # self.backend()

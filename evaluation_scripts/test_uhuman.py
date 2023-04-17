@@ -88,39 +88,41 @@ if __name__ == '__main__':
     droid = Droid(args)
     time.sleep(5)
 
+    lcd_range = 50 #range beyond which loop closure is considered 
 
     
     tstamps = []
     similar_indices = []
     i = 0
     for (t, image, intrinsics) in tqdm(image_stream(args.datapath)):
-        i += 1
+        
         # if not args.disable_vis:
         #     show_image(image)
         droid.track(t, image, intrinsics=intrinsics)
-        # print(f"Shape: {image.shape}\nType: {type(image)}")
-        # pil_img = torchvision.transforms.ToPILImage()(image.squeeze())  
-        # im_feat = droid.clipvpr_encoder(
-        #     droid.clipvpr_encoder.tf_vpr(image).to(torch.device('cuda:0')),
-        #     droid.clipvpr_encoder.llm_preprocess(pil_img).unsqueeze(0).to(torch.device('cuda:0'))
-        # )
-        # # print(im_feat.shape)
-        # droid.clipvpr_encoder.faiss_index.add(im_feat.cpu().detach().numpy())
-        # # G.add_nodes_from([t])
-        # if i > 0:
-        #     D, I = droid.clipvpr_encoder.faiss_index.search(im_feat.cpu().detach().numpy(), 3)
-        #     # print(f"Distance: {D}\nIndices: {I}")
+        print(t)
+        # print(droid.video.tstamp)
+        # print(droid.video.counter)
+        # print(torch.any(i == droid.video.tstamp))
 
-        #     #filter the indices so that they are not within 10 frames of t 
-        #     I = I[0][np.where(np.abs(I[0] - i) > 50)]
-        #     print(I.tolist())
-        #     similar_indices.append(I.tolist())
+        #check if the current frame is a keyframe
+        
+
+            # 00000000000|12
+            # 12345677891|000
+        if i > 100: 
+            break
+
+        #check if i is in the tensor droid.video.tstamp 
+        
+        # print(f"Shape: {image.shape}\nType: {type(image)}")
+        
+        i += 1
         
 
     #create a dict with the keys as the indices and the values as the elements of similar_indices 
-    # d = {}
-    # for i in range(len(similar_indices)):
-    #     d[i] = similar_indices[i]
+    d = {}
+    for i in range(len(similar_indices)):
+        d[i] = similar_indices[i]
 
     
 

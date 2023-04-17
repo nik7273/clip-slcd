@@ -32,7 +32,7 @@ class DroidFrontend:
         self.frontend_thresh = args.frontend_thresh
         self.frontend_radius = args.frontend_radius
 
-    def __update(self):
+    def __update(self, loop_candidates):
         """ add edges, perform update """
 
         self.count += 1
@@ -42,7 +42,7 @@ class DroidFrontend:
             self.graph.rm_factors(self.graph.age > self.max_age, store=True)  # based on age
 
         self.graph.add_proximity_factors(self.t1-5, max(self.t1-self.frontend_window, 0), 
-            rad=self.frontend_radius, nms=self.frontend_nms, thresh=self.frontend_thresh, beta=self.beta, remove=True)
+            rad=self.frontend_radius, nms=self.frontend_nms, thresh=self.frontend_thresh, beta=self.beta, remove=True, loop_candidates=loop_candidates)
         # # FIXME
         # if self.t1>13:
         #     a = 1
@@ -108,7 +108,7 @@ class DroidFrontend:
 
         self.graph.rm_factors(self.graph.ii < self.warmup-4, store=True)
 
-    def __call__(self):
+    def __call__(self, loop_candidates=None):
         """ main update """
 
         # do initialization
@@ -117,6 +117,6 @@ class DroidFrontend:
             
         # do update
         elif self.is_initialized and self.t1 < self.video.counter.value:
-            self.__update()
+            self.__update(loop_candidates)
 
         

@@ -293,7 +293,8 @@ class VPRModel(pl.LightningModule):
         # flat_config.useFloat16 = True
         # flat_config.device = 0
         self.embed_size = 4096
-        self.faiss_index = faiss.IndexFlatL2(self.embed_size)
+        self.l2_search = faiss.IndexFlatL2(self.embed_size)
+        self.faiss_index = faiss.IndexIDMap(self.l2_search)
 
         # perfect inekf
         # adjoint purpose
@@ -313,7 +314,7 @@ class VPRModel(pl.LightningModule):
         self.spatial_conv2 = nn.Conv2d(256, 256, kernel_size=5)
         
 
-        self.llm, self.llm_preprocess = clip.load("RN50", device=torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
+        self.llm, self.llm_preprocess = clip.load("RN50", device=torch.device('cuda:0'))
         self.llm.visual.layer1.register_forward_hook(self.get_activation('layer1'))
         self.llm.visual.layer2.register_forward_hook(self.get_activation('layer2'))
         self.llm.visual.layer3.register_forward_hook(self.get_activation('layer3'))
@@ -606,11 +607,11 @@ if __name__ == '__main__':
         miner_name='MultiSimilarityMiner', # example: TripletMarginMiner, MultiSimilarityMiner, PairMarginMiner
         miner_margin=0.1,
         faiss_gpu=False, 
-        superpoint_weights='/home/advaith/Documents/530_final_proj/superpoint_v1.pth'
+        superpoint_weights='/home/nikhil/Downloads/superpoint_v1.pth'
     )
 
     #load model weights frm weight_path 
-    model.load_from_checkpoint('/home/advaith/Documents/530_final_proj/LOGS/resnet50/lightning_logs/version_112/checkpoints/resnet50_epoch(02)_step(0069)_R1[0.9386]_R5[0.9731].ckpt')
+    model.load_from_checkpoint('/home/nikhil/Downloads/superpts1.ckpt')
     val_set = 'hloc'
     datamodule = HPointLocDataModule(
         batch_size=32,

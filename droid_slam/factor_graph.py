@@ -312,7 +312,7 @@ class FactorGraph:
         self.add_factors(ii[keep], jj[keep])
 
     
-    def add_proximity_factors(self, t0=0, t1=0, rad=2, nms=2, beta=0.25, thresh=16.0, remove=False, backend=False):
+    def add_proximity_factors(self, t0=0, t1=0, rad=2, nms=2, beta=0.25, thresh=16.0, remove=False, backend=False, loop_candidates=None):
         """ add edges to the factor graph based on distance """
 
         t = self.video.counter.value
@@ -377,7 +377,15 @@ class FactorGraph:
 
         ii, jj = torch.as_tensor(es, device=self.device).unbind(dim=-1)
         
-        
+        if loop_candidates is not None: 
+            extra_edges = loop_candidates
+            print(f"In factor: {loop_candidates}")
+            # idxs = np.where(np.array(extra_edges)==t) # idxs[0] is the row number
+            # if idxs[0].shape[0]>0:
+            #     sel_edges = torch.tensor(extra_edges, device=self.device)[idxs[0], :].reshape(-1, 2)
+            #     ii = torch.cat((ii.reshape(-1, 1), sel_edges[:, 0].reshape(-1, 1)), axis=0).reshape(-1)
+            #     jj = torch.cat((jj.reshape(-1, 1), sel_edges[:, 1].reshape(-1, 1)),axis=0).reshape(-1)
+
         # if self.datapath is not None:
         #     extra_edges = add_edges(self.datapath)
         #     idxs = np.where(np.array(extra_edges)==t) # idxs[0] is the row number
