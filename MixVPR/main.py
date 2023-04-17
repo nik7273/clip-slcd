@@ -264,7 +264,7 @@ class VPRModel(pl.LightningModule):
                 raise NotImplemented
 
             
-            pitts_dict = utils.get_validation_recalls(r_list=r_list, 
+            pitts_dict, predictions = utils.get_validation_recalls(r_list=r_list, 
                                                 q_list=q_list,
                                                 k_values=[1, 5, 10, 15, 20, 50, 100],
                                                 gt=new_positives,
@@ -272,6 +272,21 @@ class VPRModel(pl.LightningModule):
                                                 dataset_name=val_set_name,
                                                 faiss_gpu=self.faiss_gpu
                                                 )
+            
+            retrieved_images = []
+            for i in query_indices[:5]:
+                mini = [val_dataset[i]] 
+                for j in predictions[i][:5]:
+                    mini.append(val_dataset[j])
+                retrieved_images.append(mini)
+            
+            #create a subplot of 5 rows and 6 columns 
+            fig, ax = plt.subplots(5, 6, figsize=(20, 20))
+            #plot the images in retrived_images in each subplot 
+            for i in range(5):
+                for j in range(6):
+                    ax[i, j].imshow(retrieved_images[i][j])
+                    ax[i, j].axis('off')
             del r_list, q_list, feats, num_references, positives
 
             self.log(f'{val_set_name}/R1', pitts_dict[1], prog_bar=False, logger=True)
