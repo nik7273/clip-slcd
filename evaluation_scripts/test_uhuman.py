@@ -148,16 +148,51 @@ if __name__ == '__main__':
         orientations_quat_wxyz=traj_est[:,3:],
         timestamps=np.array(tstamps))
 
+    np.save("reconstructions/uhuman_apartment/traj_est.npy", traj_est.positions_xyz)
     gt_file = os.path.join(args.datapath, 'poses.txt')
     traj_ref = file_interface.read_tum_trajectory_file(gt_file)
 
-    # G = nx.Graph(d)
-    # pos = {}
-    # for i in range(traj_est.positions_xyz.shape[0]): 
-    #     pose = traj_est.positions_xyz[i]
-    #     pos[i] = (pose[0], pose[1])
-    # nx.draw(G, pos, with_labels=True)
-    # plt.show()
+    G = nx.Graph(droid.loop_candidates)
+    pos = {}
+    for i in range(traj_est.positions_xyz.shape[0]): 
+        pose = traj_est.positions_xyz[i]
+        pos[i] = (pose[0], pose[1], pose[2])
+    #plot the graph G in 3D space with positions x,y,z found in pos
+
+    # 3d spring layout
+    # pos = nx.spring_layout(G, dim=3, seed=779)
+    # Extract node and edge positions from the layout
+    node_xyz = np.array([pos[v] for v in sorted(G)])
+    edge_xyz = np.array([(pos[u], pos[v]) for u, v in G.edges()])
+
+    # Create the 3D figure
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+
+    # Plot the nodes - alpha is scaled by "depth" automatically
+    ax.scatter(*node_xyz.T, s=100, ec="w")
+
+    # Plot the edges
+    for vizedge in edge_xyz:
+        ax.plot(*vizedge.T, color="tab:gray")
+
+
+    def _format_axes(ax):
+        """Visualization options for the 3D axes."""
+        # Turn gridlines off
+        ax.grid(False)
+        # Suppress tick labels
+        for dim in (ax.xaxis, ax.yaxis, ax.zaxis):
+            dim.set_ticks([])
+        # Set axes labels
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
+
+
+    _format_axes(ax)
+    fig.tight_layout()
+    plt.show()
 
     traj_ref, traj_est = sync.associate_trajectories(traj_ref, traj_est)
     # result = main_ape.ape(traj_ref, traj_est, est_name='traj', 

@@ -44,13 +44,17 @@ class FactorGraph:
         self.target_inac = torch.zeros([1, 0, ht, wd, 2], device=device, dtype=torch.float)
         self.weight_inac = torch.zeros([1, 0, ht, wd, 2], device=device, dtype=torch.float)
 
-    def __filter_repeated_edges(self, ii, jj):
+    def __filter_repeated_edges(self, ii, jj, check_inac=True):
         """ remove duplicate edges """
 
         keep = torch.zeros(ii.shape[0], dtype=torch.bool, device=ii.device)
-        eset = set(
-            [(i.item(), j.item()) for i, j in zip(self.ii, self.jj)] +
-            [(i.item(), j.item()) for i, j in zip(self.ii_inac, self.jj_inac)])
+        if check_inac:
+            eset = set(
+                [(i.item(), j.item()) for i, j in zip(self.ii, self.jj)] +
+                [(i.item(), j.item()) for i, j in zip(self.ii_inac, self.jj_inac)])
+        else:
+            eset = set(
+            [(i.item(), j.item()) for i, j in zip(self.ii, self.jj)])
 
         for k, (i, j) in enumerate(zip(ii, jj)):
             keep[k] = (i.item(), j.item()) not in eset
@@ -102,12 +106,19 @@ class FactorGraph:
         if ii.shape[0] == 0:
             return
 
-        # place limit on number of factors
+        # # place limit on number of factors
         if self.max_factors > 0 and self.ii.shape[0] + ii.shape[0] > self.max_factors \
                 and self.corr is not None and remove:
             
+            
+
             ix = torch.arange(len(self.age))[torch.argsort(self.age).cpu()]
             self.rm_factors(ix >= self.max_factors - ii.shape[0], store=True)
+        if len(self.weight_indices) > 0:
+            # must_keeps = ii[self.weight_indices] #take the loop closure that we must keep 
+            for i in range(len(self.weight_indices)):
+                self.weight_indices[i] += len(self.ii)
+
 
         net = self.video.nets[ii].to(self.device).unsqueeze(0)
 
@@ -223,7 +234,7 @@ class FactorGraph:
 
             if len(self.weight_indices) > 0:
                 inds = torch.tensor(self.weight_indices).to(torch.long)
-                self.weight[0,inds] *= 1e10
+                self.weight[0,inds] *= 100
 
             ht, wd = self.coords0.shape[0:2]
             self.damping[torch.unique(self.ii)] = damping
@@ -384,21 +395,20 @@ class FactorGraph:
         ii, jj = torch.as_tensor(es, device=self.device).unbind(dim=-1)
 
 
-        ii, jj = self.__filter_repeated_edges(ii, jj)
+        ii, jj = self.__filter_repeated_edges(ii, jj, check_inac=False)
 
         self.weight_indices = []
-        if loop_candidates is not None: 
-            for key in loop_candidates:
-                for candidate in loop_candidates[key]:
-                    ii = torch.cat((ii.reshape(-1, 1), torch.tensor([candidate, key], device=ii.device).unsqueeze(-1)), axis=0).reshape(-1)
-                    jj = torch.cat((jj.reshape(-1, 1), torch.tensor([key, candidate], device=ii.device).unsqueeze(-1)),axis=0).reshape(-1)
+        # if loop_candidates is not None: 
+        #     for key in loop_candidates:
+        #         for candidate in loop_candidates[key]:
+        #             ii = torch.cat((ii.reshape(-1, 1), torch.tensor([candidate, key], device=ii.device).unsqueeze(-1)), axis=0).reshape(-1)
+        #             jj = torch.cat((jj.reshape(-1, 1), torch.tensor([key, candidate], device=ii.device).unsqueeze(-1)),axis=0).reshape(-1)
                     
-                    ii_filt, jj_filt = self.__filter_repeated_edges(ii, jj)
-                    if ii_filt.shape[0] == ii.shape[0]:
-                        self.weight_indices += [len(self.ii) + ii.shape[0]-3, len(self.ii) + ii.shape[0]-2]
-                    else:
-                        ii, jj = ii_filt, jj_filt
-            print(f"In factor: {loop_candidates}")
+        #             ii_filt, jj_filt = self.__filter_repeated_edges(ii, jj, check_inac=False)
+        #             if ii_filt.shape[0] == ii.shape[0]:
+        #                 self.weight_indices += [ii.shape[0]-2, ii.shape[0]-1]
+        #             ii, jj = ii_filt, jj_filt
+        #     print(f"In factor: {loop_candidates}")
 
             # for candidate in loop_candidates:
             #     ii = torch.cat((ii.reshape(-1, 1), [candidate, self.t1-1]), axis=0).reshape(-1)
