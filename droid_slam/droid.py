@@ -148,7 +148,7 @@ class Droid:
                     if torch.any(j == self.video.tstamp[:self.video.counter.value]) and torch.any(i == self.video.tstamp[:self.video.counter.value]): #check if the index is a keyframe
                         print("both are keyframes", i, j, self.video.tstamp[:self.video.counter.value])
                         ind = torch.where(j == self.video.tstamp)[0][0].item()
-                        self.loop_candidates[i].append(ind)
+                        self.loop_candidates[i].append(j)
                         jj = torch.tensor([j]).to(torch.device('cuda:0'))
                         ii = torch.tensor([i]).to(torch.device('cuda:0')).repeat(len(jj))
                         # ii_cat = torch.cat([ii, jj], dim=0)
