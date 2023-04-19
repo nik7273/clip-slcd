@@ -109,8 +109,8 @@ if __name__ == '__main__':
 
             # 00000000000|12
             # 12345677891|000
-        if i > 100: 
-            break
+        # if i > 100: 
+        #     break
 
         #check if i is in the tensor droid.video.tstamp 
         

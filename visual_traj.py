@@ -62,23 +62,24 @@ if __name__ == '__main__':
     norm_range = np.max(traj_norm, axis=0) - np.min(traj_norm, axis=0)
     # extra_range = np.max(traj_extra, axis=0) - np.min(traj_extra, axis=0)
     
-    
-    ax = plt.figure().add_subplot(projection='3d')
-    ax.plot(traj_norm[:, 0], traj_norm[:, 1], traj_norm[:, 2], color='r', marker='o', label='Prediction without extra edge')
+    plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.plot3D(traj_norm[:, 0], traj_norm[:, 1], traj_norm[:, 2], color='r', marker='o', label='Prediction without extra edge')
     # ax.plot(traj_extra[:, 0], traj_extra[:, 1], traj_extra[:, 2], color='b', marker='o', label='Prediction with extra edge')
     # ax.plot(traj_extra_op[:, 0], traj_extra_op[:, 1], traj_extra_op[:, 2], color='m', marker='o', label='Prediction with extra edge (optimize)')
-    ax.plot(traj_gt[:, 0], traj_gt[:, 1], traj_gt[:, 2], color='g', marker='o', label='Ground Truth')
+    ax.plot3D(traj_gt[:, 0], traj_gt[:, 1], traj_gt[:, 2], color='g', marker='o', label='Ground Truth')
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
     ax.set_zlabel('z (m)')
-    
     # # 2d plot
     # plt.plot(traj_norm[:, 0], traj_norm[:, 1], color='r', marker='o', label='Prediction without extra edge')
     # plt.plot(traj_extra[:, 0], traj_extra[:, 1], color='b', marker='o', label='Prediction with extra edge')
     # plt.plot(traj_gt[:, 0], traj_gt[:, 1], color='g', marker='o', label='Groud truth')
     # plt.xlabel('x (m)')
     # plt.ylabel('y (m)')
+
+    # ax.set_aspect('equal')
     
-    plt.legend()
+    ax.legend()
     plt.show()
     

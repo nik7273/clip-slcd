@@ -9,7 +9,7 @@ from motion_filter import MotionFilter
 from droid_frontend import DroidFrontend
 from droid_backend import DroidBackend
 from trajectory_filler import PoseTrajectoryFiller
-
+from matplotlib import pyplot as plt
 from collections import OrderedDict
 from torch.multiprocessing import Process
 
@@ -27,7 +27,7 @@ class Droid:
         # filter incoming frames so that there is enough motion
         self.filterx = MotionFilter(self.net, self.video, thresh=args.filter_thresh)
 
-        self.lcd_range = 50
+        self.lcd_range = 25
         # frontend process
         self.frontend = DroidFrontend(self.net, self.video, self.args)
         
@@ -119,7 +119,7 @@ class Droid:
         self.clipvpr_encoder.to(torch.device('cuda:0')).eval()
 
 
-    def check_loop_candidates(self, image, i):        
+    def check_loop_candidates(self, image, i):
         pil_img = torchvision.transforms.ToPILImage()(image.squeeze())
         # print(droid.clipv=pr_encoder.llm.device()) 
         im_feat = self.clipvpr_encoder(
@@ -131,6 +131,7 @@ class Droid:
             self.clipvpr_encoder.faiss_index.add_with_ids(im_feat.cpu().detach().numpy(), np.asarray([i]).astype(np.int64))
             # droid.clipvpr_encoder.faiss_index.add(im_feat.cpu().detach().numpy())
             # G.add_nodes_from([t])
+        self.loop_candidates[i] = []
         if i > 0:
             D, I = self.clipvpr_encoder.faiss_index.search(im_feat.cpu().detach().numpy(), 3)
             # print(f"Distance: {D}\nIndices: {I}")
@@ -140,11 +141,14 @@ class Droid:
             #filter the indices so that they are not within 10 frames of t 
             I = I[0][np.where(np.abs(I[0] - i) > self.lcd_range)]
             # print(I.tolist())
-            self.loop_candidates[i] = []
+            
             if len(I) > 0:
+                print("Candidates: ", I.tolist(), "Me", i)
                 for j in I.tolist():
-                    if torch.any(j == self.video.tstamp): #check if the index is a keyframe
-                        self.loop_candidates[i] = I.tolist()
+                    if torch.any(j == self.video.tstamp[:self.video.counter.value]) and torch.any(i == self.video.tstamp[:self.video.counter.value]): #check if the index is a keyframe
+                        print("both are keyframes", i, j, self.video.tstamp[:self.video.counter.value])
+                        ind = torch.where(j == self.video.tstamp)[0][0].item()
+                        self.loop_candidates[i].append(ind)
                         jj = torch.tensor([j]).to(torch.device('cuda:0'))
                         ii = torch.tensor([i]).to(torch.device('cuda:0')).repeat(len(jj))
                         # ii_cat = torch.cat([ii, jj], dim=0)
@@ -165,11 +169,25 @@ class Droid:
             #loop closure detection and edge proposal 
             self.check_loop_candidates(image, tstamp)
 
+            # if len(self.loop_candidates[tstamp]) > 0:
+            #     q_ind = torch.where(tstamp == self.video.tstamp)[0][0].item()
+            #     r_ind = self.loop_candidates[tstamp][0]
+            #     print("qind", q_ind, "Rind", r_ind)
+            #     q_img = self.video.images[q_ind]
+            #     r_img = self.video.images[r_ind]
+                
+            #     #create a subplot with two images 
+            #     fig, ax = plt.subplots(1, 2)
+            #     ax[0].imshow(q_img.cpu().numpy().transpose(1, 2, 0))
+            #     ax[1].imshow(r_img.cpu().numpy().transpose(1, 2, 0))
+            #     plt.show()
+            #     print("uwu")
+
             # local bundle adjustment
             if tstamp > 0:
                 self.frontend(self.loop_candidates[tstamp])
             else:
-                self.frontend()
+                self.frontend([])
 
             # global bundle adjustment
             # self.backend()

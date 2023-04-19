@@ -19,7 +19,7 @@ class FactorGraph:
         self.corr_impl = corr_impl
         self.upsample = upsample
         self.datapath = datapath
-
+        self.weight_indices = []
         # operator at 1/8 resolution
         self.ht = ht = video.ht // 8
         self.wd = wd = video.wd // 8
@@ -221,6 +221,10 @@ class FactorGraph:
             self.target = coords1 + delta.to(dtype=torch.float) #pij*
             self.weight = weight.to(dtype=torch.float)
 
+            if len(self.weight_indices) > 0:
+                inds = torch.tensor(self.weight_indices).to(torch.long)
+                self.weight[0,inds] *= 1e10
+
             ht, wd = self.coords0.shape[0:2]
             self.damping[torch.unique(self.ii)] = damping
 
@@ -233,6 +237,8 @@ class FactorGraph:
 
             else:
                 ii, jj, target, weight = self.ii, self.jj, self.target, self.weight
+
+            # TODO: modify weights here
 
 
             damping = .2 * self.damping[torch.unique(ii)].contiguous() + EP
@@ -376,10 +382,28 @@ class FactorGraph:
                             d[(i1-t0)*(t-t1) + (j1-t1)] = np.inf
 
         ii, jj = torch.as_tensor(es, device=self.device).unbind(dim=-1)
-        
+
+
+        ii, jj = self.__filter_repeated_edges(ii, jj)
+
+        self.weight_indices = []
         if loop_candidates is not None: 
-            extra_edges = loop_candidates
+            for key in loop_candidates:
+                for candidate in loop_candidates[key]:
+                    ii = torch.cat((ii.reshape(-1, 1), torch.tensor([candidate, key], device=ii.device).unsqueeze(-1)), axis=0).reshape(-1)
+                    jj = torch.cat((jj.reshape(-1, 1), torch.tensor([key, candidate], device=ii.device).unsqueeze(-1)),axis=0).reshape(-1)
+                    
+                    ii_filt, jj_filt = self.__filter_repeated_edges(ii, jj)
+                    if ii_filt.shape[0] == ii.shape[0]:
+                        self.weight_indices += [len(self.ii) + ii.shape[0]-3, len(self.ii) + ii.shape[0]-2]
+                    else:
+                        ii, jj = ii_filt, jj_filt
             print(f"In factor: {loop_candidates}")
+
+            # for candidate in loop_candidates:
+            #     ii = torch.cat((ii.reshape(-1, 1), [candidate, self.t1-1]), axis=0).reshape(-1)
+            #     jj = torch.cat((jj.reshape(-1, 1), [self.t1-1, candidate]),axis=0).reshape(-1)
+
             # idxs = np.where(np.array(extra_edges)==t) # idxs[0] is the row number
             # if idxs[0].shape[0]>0:
             #     sel_edges = torch.tensor(extra_edges, device=self.device)[idxs[0], :].reshape(-1, 2)

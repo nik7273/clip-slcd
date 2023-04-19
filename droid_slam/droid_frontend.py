@@ -38,8 +38,8 @@ class DroidFrontend:
         self.count += 1
         self.t1 += 1
 
-        if self.graph.corr is not None:
-            self.graph.rm_factors(self.graph.age > self.max_age, store=True)  # based on age
+        # if self.graph.corr is not None:
+        #     self.graph.rm_factors(self.graph.age > self.max_age, store=True)  # based on age
 
         self.graph.add_proximity_factors(self.t1-5, max(self.t1-self.frontend_window, 0), 
             rad=self.frontend_radius, nms=self.frontend_nms, thresh=self.frontend_thresh, beta=self.beta, remove=True, loop_candidates=loop_candidates)
@@ -116,7 +116,7 @@ class DroidFrontend:
             self.__initialize()
             
         # do update
-        elif self.is_initialized and self.t1 < self.video.counter.value:
-            self.__update(loop_candidates)
+        elif (self.is_initialized and self.t1 < self.video.counter.value):
+            self.__update({self.t1: loop_candidates})
 
         
