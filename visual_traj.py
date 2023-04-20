@@ -22,7 +22,7 @@ import torch.nn.functional as F
 
 
 if __name__ == '__main__':
-    datapath = '/home/nikhil/Documents/rob_530/clip-slcd/datasets/uhumans/left_images'
+    datapath = '' #path to uhumans/left_images goes here
     path_norm = 'reconstructions/uhuman_apartment' # tum3d_room_norm'
     # path_extra = 'reconstructions/uhuman_apartment_extra/' #tum3d_room_extra'
     

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-UHUMAN_PATH=/home/nikhil/Documents/rob_530/clip-slcd/datasets/uhumans
+UHUMAN_PATH= # path to uhumans folder
 
 evalset=(
     left_images

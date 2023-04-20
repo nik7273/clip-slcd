@@ -607,11 +607,11 @@ if __name__ == '__main__':
         miner_name='MultiSimilarityMiner', # example: TripletMarginMiner, MultiSimilarityMiner, PairMarginMiner
         miner_margin=0.1,
         faiss_gpu=False, 
-        superpoint_weights='/home/nikhil/Downloads/superpoint_v1.pth'
+        superpoint_weights=''# path to superpoint_v1.pth
     )
 
     #load model weights frm weight_path 
-    model.load_from_checkpoint('/home/nikhil/Downloads/superpts1.ckpt')
+    model.load_from_checkpoint('')# path to resnet checkpoint
     val_set = 'hloc'
     datamodule = HPointLocDataModule(
         batch_size=32,

@@ -1,3 +1,6 @@
+# CLIP-VPR
+Semantic loop closure detection in SLAM using CLIP. Built on top of the DROID-SLAM backbone (below).
+
 # DROID-SLAM
 
 

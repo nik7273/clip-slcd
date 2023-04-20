@@ -107,13 +107,12 @@ class Droid:
             miner_name='MultiSimilarityMiner', # example: TripletMarginMiner, MultiSimilarityMiner, PairMarginMiner
             miner_margin=0.1,
             faiss_gpu=False,
-            superpoint_weights='/home/nikhil/Downloads/superpoint_v1.pth',
+            superpoint_weights='', # path to superpoint_v1.pth goes here
         )
         self.clipvpr_encoder.to(torch.device('cuda:0'))
 
         #load the model weights from the mode_p[ath]
-        model_path = '/home/nikhil/Downloads/superpts1.ckpt'
-        # model_path ='/home/nikhil/Downloads/resnet50_epoch(78)_step(3555)_R1[0.9790]_R5[0.9925].ckpt'
+        model_path = '' # path to resnet model weights
         # self.clipvpr_encoder.load_from_checkpoint(model_path)
         self.clipvpr_encoder.load_state_dict(torch.load(model_path)['state_dict'])
         self.clipvpr_encoder.to(torch.device('cuda:0')).eval()
