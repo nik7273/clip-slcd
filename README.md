@@ -1,6 +1,22 @@
 # CLIP-VPR
 Semantic loop closure detection in SLAM using CLIP. Built on top of the DROID-SLAM backbone (below).
 
+## Datasets
+[HPointLoc](https://github.com/alexmelekhin/HPointLoc)  
+[uHumans](https://web.mit.edu/sparklab/datasets/uHumans/)  
+You should convert the files in uHumans using the script `uhumans_subscribe_sync.py` to convert from rosbags to a folder format that can be read by our test scripts.
+
+If you want to visualize a trajectory, run `visual_traj.py`.
+
+## MixVPR
+To run MixVPR, run `MixVPR/main.py`.
+
+## SLAM
+Run `test_uhumans.py`.
+
+For all scripts above, you will need to change the appropriate paths for the weights and data.
+
+Below is the original DROID-SLAM README, which should still be runnable.
 # DROID-SLAM
 
 
